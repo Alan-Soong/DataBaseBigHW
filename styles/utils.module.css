@@ -1,0 +1,246 @@
+.heading2Xl {
+  font-size: 2.5rem;
+  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: -0.05rem;
+  margin: 1rem 0;
+}
+
+.headingXl {
+  font-size: 2rem;
+  line-height: 1.3;
+  font-weight: 800;
+  letter-spacing: -0.05rem;
+  margin: 1rem 0;
+}
+
+.headingLg {
+  font-size: 1.5rem;
+  line-height: 1.4;
+  margin: 1rem 0;
+}
+
+.headingMd {
+  font-size: 1.2rem;
+  line-height: 1.5;
+}
+
+.borderCircle {
+  border-radius: 9999px;
+}
+
+.colorInherit {
+  color: inherit;
+}
+
+.padding1px {
+  padding-top: 1px;
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.listItem {
+  margin: 0 0 1.25rem;
+}
+
+.lightText {
+  color: #999;
+}
+
+/* 按钮样式的设计 */
+.buttonContainer {
+  margin-top: 30px;
+  display: flex;
+  justify-content: center;
+  /* 居中 */
+  gap: 20px;
+  /* 两个按钮之间间距 */
+}
+
+.button {
+  padding: 12px 24px;
+  font-size: 16px;
+  cursor: pointer;
+  background-color: #0070f3;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  justify-content: center;
+  /* display: flex; */
+}
+
+.button:hover {
+  background-color: #005bb5;
+  transform: scale(1.05);
+}
+
+/* 以下样式应添加到 styles/utils.module.css 的末尾 */
+/* 如果已有同名类（如 postContainer），请使用新类名或合并样式 */
+
+.postContainer {
+  display: flex;
+  min-height: 100vh;
+  /* 确保容器充满视口高度 */
+  width: 100%;
+}
+
+.postSidebar {
+  width: 250px;
+  background-color: #f4f4f4;
+  padding: 20px;
+  border-right: 1px solid #ddd;
+  flex-shrink: 0;
+  /* 防止边栏被压缩 */
+}
+
+.sidebarTitle {
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.sidebarMenu {
+  list-style: none;
+  padding: 0;
+}
+
+.sidebarMenu li {
+  margin-bottom: 10px;
+}
+
+.sidebarMenu a {
+  text-decoration: none;
+  color: #0070f3;
+  font-size: 1rem;
+}
+
+.sidebarMenu a:hover {
+  text-decoration: underline;
+}
+
+.postMain {
+  flex: 1;
+  /* 占据剩余空间 */
+  padding: 20px;
+  background-color: #fff;
+}
+
+.postTitle {
+  font-size: 2rem;
+  margin-bottom: 20px;
+}
+
+.note {
+  font-size: 1.25rem;
+  color: #d32f2f;
+  /* 红色提示 */
+  margin-bottom: 20px;
+}
+
+.placeholder {
+  padding: 20px;
+  background-color: #fafafa;
+  border: 1px dashed #ccc;
+  text-align: center;
+  color: #666;
+}
+
+/* 以下样式应添加到 styles/utils.module.css 的末尾 */
+/* 注意：如果已有 modalOverlay、modalContent 等类名，请合并或重命名以避免冲突 */
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  /* 半透明遮罩 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  width: 400px;
+  max-width: 90%;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.modalTitle {
+  font-size: 1.5rem;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.modalForm {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.input {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.modalClose {
+  background-color: #d32f2f;
+  /* 红色关闭按钮 */
+  color: #fff;
+}
+
+.modalClose:hover {
+  background-color: #b71c1c;
+}
+
+.buttonGroup {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.errorText {
+  color: red;
+  margin-top: 0.5rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .postContainer {
+    flex-direction: column;
+  }
+
+  .postSidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 20px;
+  }
+
+  .postMain {
+    padding: 15px;
+  }
+
+  .postCard {
+    border: 1px solid #ccc;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+  }
+
+}
