@@ -1,4 +1,4 @@
-import { getConnection } from './db'; // 假设你有一个 db.js 文件来管理数据库连接
+import { getConnection } from './db';
 
 import { serialize } from 'cookie';
 

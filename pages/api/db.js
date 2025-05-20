@@ -8,3 +8,15 @@ export async function getConnection() {
     database: 'mybbs'
   });
 }
+
+export async function getPools() {
+  return mysql.createPool({
+    host: 'localhost',
+    user: 'root',
+    password: '120NKu418Szl,', // ← 替换为你的真实密码
+    database: 'mybbs'
+    // waitForConnections: true,
+    // connectionLimit: 10,
+    // queueLimit: 0
+  });
+}
