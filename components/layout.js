@@ -1,5 +1,5 @@
 import Head from 'next/head'
-import styles from './layout.module.css'
+import styles from '../components_styles/layout.module.css'
 import utilStyles from '../styles/utils.module.css'
 import Link from 'next/link'
 
@@ -37,7 +37,6 @@ export default function Layout({ children, home }) {
         ) : (
           <>
             <Link href="/">
-              
                 <img
                   src="/images/title.jpg"
                   className={`${styles.headerImage} ${utilStyles.borderCircle}`}
@@ -53,10 +52,10 @@ export default function Layout({ children, home }) {
           </>
         )}
       </header>
-      <main>{children}</main>
+      <main className={styles.mainContent}>{children}</main>
       {!home && (
         <div className={styles.backToHome}>
-          <Link href="/">
+          <Link href="/" className={styles.backLink}>
             ← Back to home
           </Link>
         </div>

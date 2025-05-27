@@ -1,19 +1,22 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import styles from '../styles/utils.module.css';
+import styles from '../components_styles/LoginModal.module.css';
 
 export default function LoginModal({ isOpen, onClose }) {
   const router = useRouter();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = async () => {
+  const handleLogin = async (e) => {
+    e.preventDefault();
     if (!username || !password) {
       setError('请输入用户名和密码');
       return;
     }
 
+    setIsLoading(true);
     try {
       const res = await fetch('/api/login', {
         method: 'POST',
@@ -24,61 +27,83 @@ export default function LoginModal({ isOpen, onClose }) {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.message || '登录失败');
+        setError(data.message || '登录失败，请检查凭证');
         return;
       }
 
-      // 登录成功
+      // 登录成功后，先获取用户信息
+      const userRes = await fetch(`/api/auth/session?username=${encodeURIComponent(username)}`);
+      
+      if (!userRes.ok) {
+        setError('获取用户信息失败');
+        return;
+      }
+      
+      // 关闭登录窗口
       onClose();
-      router.push('/posts/user_mode');
+      
+      // 跳转到用户模式页面
+      router.push({
+        pathname: '/posts/user_mode',
+        query: { username }
+      });
     } catch (err) {
-      console.error(err);
-      setError('网络错误或服务器异常');
+      console.error('登录错误:', err);
+      setError('网络连接异常，请稍后重试');
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (isOpen) {
+      setUsername('');
+      setPassword('');
+      setError('');
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
   return (
-    <div className={styles.modalOverlay} onClick={onClose}>
-      <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-        <h2 className={styles.modalTitle}>登录</h2>
-        <form className={styles.modalForm} onSubmit={(e) => e.preventDefault()}>
-          <label>
-            用户名：
+    <div className={styles.modalOverlay}>
+      <div className={styles.modalContainer}>
+        <div className={styles.modalHeader}>
+          <h2>用户登录</h2>
+          <button onClick={onClose} className={styles.closeButton}>&times;</button>
+        </div>
+        
+        <form onSubmit={handleLogin} className={styles.modalBody}>
+          <div className={styles.inputGroup}>
+            <label>账号</label>
             <input
               type="text"
-              className={styles.input}
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              placeholder="请输入用户名"
+              autoFocus
             />
-          </label>
-          <label>
-            密码：
+          </div>
+
+          <div className={styles.inputGroup}>
+            <label>密码</label>
             <input
               type="password"
-              className={styles.input}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              placeholder="请输入密码"
             />
-          </label>
-          {error && <p className={styles.errorText}>{error}</p>}
-          <div className={styles.buttonGroup}>
-            <button
-              type="button"
-              className={styles.button}
-              onClick={handleLogin}
-            >
-              登录
-            </button>
-            <button
-              type="button"
-              className={`${styles.button} ${styles.modalClose}`}
-              onClick={onClose}
-            >
-              关闭
-            </button>
           </div>
+
+          {error && <div className={styles.errorMessage}>{error}</div>}
+
+          <button 
+            type="submit" 
+            className={styles.submitButton}
+            disabled={isLoading}
+          >
+            {isLoading ? '登录中...' : '立即登录'}
+          </button>
         </form>
       </div>
     </div>

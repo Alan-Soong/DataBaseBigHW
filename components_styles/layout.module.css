@@ -1,0 +1,86 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  min-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  padding-top: 0; /* 移除容器顶部内边距 */
+}
+
+.header {
+  padding: 1rem 0;
+  text-align: center;
+  background: linear-gradient(135deg, #6e8efb, #a777e3);
+  color: white;
+  margin-bottom: 0rem;
+  border-radius: 0 0 20px 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.headerHomeImage {
+  width: 120px;  /* 适当缩小图片尺寸 */
+  height: 120px; /* 保持宽高一致 */
+  margin: 0 auto; /* 确保居中 */
+}
+
+.headerHomeImage:hover {
+  transform: scale(1.05);
+}
+
+.heading {
+  font-size: 2.5rem;
+  margin-top: 1rem;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.headerImage {
+  width: 100px;
+  height: 100px;
+  border: 3px solid white;
+}
+
+.subHeading {
+  font-size: 1.8rem;
+  margin-top: 0.5rem;
+}
+
+.mainContent {
+  flex: 1;
+  padding: 0 1rem;
+  margin-top: 0.5rem;
+}
+
+.backToHome {
+  margin: 2rem 0;
+  text-align: center;
+}
+
+.logoLink, .homeLink, .backLink {
+  color: white;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.logoLink:hover, .homeLink:hover, .backLink:hover {
+  color: #f8f9fa;
+  text-decoration: underline;
+}
+
+.backLink {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background-color: #6e8efb;
+  border-radius: 50px;
+  transition: all 0.3s ease;
+}
+
+.backLink:hover {
+  background-color: #5a7ae0;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  text-decoration: none;
+}

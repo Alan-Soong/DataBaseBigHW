@@ -1,42 +1,464 @@
-import Link from 'next/link'
-import Head from 'next/head'
-import Layout from '../../components/layout'
-import utilStyles from '../../styles/utils.module.css'
+import { useState, useEffect } from 'react';
+import Head from 'next/head';
+import Layout from '../../components/layout';
+import utilStyles from '../../styles/utils.module.css';
+import { useRouter } from 'next/router';
+import Link from 'next/link';
 
-export default function FirstPost() {
+export default function AdminMode() {
+  const router = useRouter();
+  const [users, setUsers] = useState([]);
+  const [posts, setPosts] = useState([]);
+  const [comments, setComments] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('users');
+  const [actionLoading, setActionLoading] = useState(false);
+
+  // 获取当前登录用户信息
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const { username } = router.query;
+        if (!username) return;
+
+        const res = await fetch(`/api/auth/session?username=${encodeURIComponent(username)}`);
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        
+        const data = await res.json();
+        if (data.user) {
+          setCurrentUser(data.user);
+          
+          // 检查是否为管理员
+          const adminRes = await fetch(`/api/checkAdmin?userId=${data.user.user_id}`);
+          const adminData = await adminRes.json();
+          
+          if (!adminData.isAdmin) {
+            alert('您没有管理员权限');
+            router.push({
+              pathname: '/posts/user_mode',
+              query: { username }
+            });
+          }
+        } else {
+          router.push('/');
+        }
+      } catch (error) {
+        console.error('获取当前用户信息失败:', error);
+        router.push('/');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (router.isReady && router.query.username) {
+      fetchCurrentUser();
+    }
+  }, [router.isReady, router.query]);
+
+  // 获取所有用户
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await fetch('/api/admin/users');
+        const data = await res.json();
+        if (data.success) {
+          setUsers(data.users);
+        }
+      } catch (error) {
+        console.error('获取用户列表失败:', error);
+      }
+    };
+
+    if (!loading && currentUser) {
+      fetchUsers();
+    }
+  }, [loading, currentUser]);
+
+  // 获取所有帖子
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const res = await fetch('/api/admin/posts');
+        const data = await res.json();
+        if (data.success) {
+          setPosts(data.posts);
+        }
+      } catch (error) {
+        console.error('获取帖子列表失败:', error);
+      }
+    };
+
+    if (!loading && currentUser && activeTab === 'posts') {
+      fetchPosts();
+    }
+  }, [loading, currentUser, activeTab]);
+
+  // 获取所有评论
+  useEffect(() => {
+    const fetchComments = async () => {
+      try {
+        const res = await fetch('/api/admin/comments');
+        const data = await res.json();
+        if (data.success) {
+          setComments(data.comments);
+        }
+      } catch (error) {
+        console.error('获取评论列表失败:', error);
+      }
+    };
+
+    if (!loading && currentUser && activeTab === 'comments') {
+      fetchComments();
+    }
+  }, [loading, currentUser, activeTab]);
+
+  // 处理删除用户
+  const handleDeleteUser = async (userId) => {
+    if (!confirm('确定要删除该用户吗？此操作不可撤销，将同时删除该用户的所有帖子和评论。')) {
+      return;
+    }
+    
+    setActionLoading(true);
+    try {
+      const res = await fetch('/api/admin/deleteUser', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId })
+      });
+      
+      const data = await res.json();
+      if (data.success) {
+        setUsers(users.filter(user => user.user_id !== userId));
+        alert('用户删除成功');
+      } else {
+        alert(data.message || '删除失败');
+      }
+    } catch (error) {
+      console.error('删除用户失败:', error);
+      alert('操作失败，请稍后重试');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // 处理删除帖子
+  const handleDeletePost = async (postId) => {
+    if (!confirm('确定要删除该帖子吗？此操作不可撤销，将同时删除该帖子的所有评论。')) {
+      return;
+    }
+    
+    setActionLoading(true);
+    try {
+      const res = await fetch('/api/admin/deletePost', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ postId })
+      });
+      
+      const data = await res.json();
+      if (data.success) {
+        setPosts(posts.filter(post => post.post_id !== postId));
+        alert('帖子删除成功');
+      } else {
+        alert(data.message || '删除失败');
+      }
+    } catch (error) {
+      console.error('删除帖子失败:', error);
+      alert('操作失败，请稍后重试');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // 处理删除评论
+  const handleDeleteComment = async (commentId) => {
+    if (!confirm('确定要删除该评论吗？此操作不可撤销。')) {
+      return;
+    }
+    
+    setActionLoading(true);
+    try {
+      const res = await fetch('/api/admin/deleteComment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ commentId })
+      });
+      
+      const data = await res.json();
+      if (data.success) {
+        setComments(comments.filter(comment => comment.comment_id !== commentId));
+        alert('评论删除成功');
+      } else {
+        alert(data.message || '删除失败');
+      }
+    } catch (error) {
+      console.error('删除评论失败:', error);
+      alert('操作失败，请稍后重试');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // 处理设置管理员权限
+  const handleSetAdmin = async (userId, isAdmin) => {
+    setActionLoading(true);
+    try {
+      const res = await fetch('/api/admin/setAdmin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, isAdmin })
+      });
+      
+      const data = await res.json();
+      if (data.success) {
+        setUsers(users.map(user => 
+          user.user_id === userId ? { ...user, is_admin: isAdmin } : user
+        ));
+        alert(`用户${isAdmin ? '设为管理员' : '取消管理员权限'}成功`);
+      } else {
+        alert(data.message || '操作失败');
+      }
+    } catch (error) {
+      console.error('设置管理员权限失败:', error);
+      alert('操作失败，请稍后重试');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleString('zh-CN', {
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit'
+    });
+  };
+
   return (
     <Layout>
       <Head>
-        <title>First Post</title>
+        <title>管理员后台</title>
       </Head>
-      <div className={utilStyles.postContainer}>
-        {/* 左侧边栏 */}
-        <aside className={utilStyles.postSidebar}>
-          <h3 className={utilStyles.sidebarTitle}>导航</h3>
+      
+      <div className={utilStyles.adminContainer}>
+        <div className={utilStyles.adminSidebar}>
+          <h3 className={utilStyles.sidebarTitle}>管理菜单</h3>
           <ul className={utilStyles.sidebarMenu}>
             <li>
-              <Link href="/">返回首页</Link>
+              <a 
+                href="#" 
+                className={activeTab === 'users' ? utilStyles.active : ''}
+                onClick={(e) => {e.preventDefault(); setActiveTab('users');}}
+              >
+                用户管理
+              </a>
             </li>
             <li>
-              <Link href="/posts/other-post">其他帖子</Link>
+              <a 
+                href="#" 
+                className={activeTab === 'posts' ? utilStyles.active : ''}
+                onClick={(e) => {e.preventDefault(); setActiveTab('posts');}}
+              >
+                帖子管理
+              </a>
             </li>
             <li>
-              <Link href="/about">关于我们</Link>
+              <a 
+                href="#" 
+                className={activeTab === 'comments' ? utilStyles.active : ''}
+                onClick={(e) => {e.preventDefault(); setActiveTab('comments');}}
+              >
+                评论管理
+              </a>
+            </li>
+            <li>
+              <Link href={{
+                pathname: '/posts/user_mode',
+                query: { username: router.query.username }
+              }}>
+                返回论坛
+              </Link>
             </li>
           </ul>
-        </aside>
-        {/* 右侧主内容区域 */}
-        <main className={utilStyles.postMain}>
-          <h1 className={utilStyles.postTitle}>First Post</h1>
-          <h2 className={utilStyles.note}>
-            注意！！！新的版本不支持 Link 里面嵌套标签
-          </h2>
-          {/* 空白区域，可添加未来内容 */}
-          <div className={utilStyles.placeholder}>
-            <p>此处为空白区域，可添加内容</p>
-          </div>
+          
+          {currentUser && (
+            <div className={utilStyles.sidebarSection}>
+              <h4>当前管理员</h4>
+              <div className={utilStyles.userInfo}>
+                <div className={utilStyles.avatar}>
+                  {currentUser.username?.charAt(0) || '?'}
+                </div>
+                <span>{currentUser.username}</span>
+              </div>
+            </div>
+          )}
+        </div>
+        
+        <main className={utilStyles.adminMain}>
+          <h1 className={utilStyles.adminTitle}>管理员后台</h1>
+          
+          {loading ? (
+            <div className={utilStyles.loading}>加载中...</div>
+          ) : (
+            <>
+              {activeTab === 'users' && (
+                <div className={utilStyles.adminSection}>
+                  <h2 className={utilStyles.sectionTitle}>用户管理</h2>
+                  <div className={utilStyles.tableContainer}>
+                    <table className={utilStyles.adminTable}>
+                      <thead>
+                        <tr>
+                          <th>ID</th>
+                          <th>用户名</th>
+                          <th>专业</th>
+                          <th>等级</th>
+                          <th>经验值</th>
+                          <th>管理员</th>
+                          <th>操作</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {users.length === 0 ? (
+                          <tr>
+                            <td colSpan="7" className={utilStyles.emptyRow}>暂无用户数据</td>
+                          </tr>
+                        ) : (
+                          users.map(user => (
+                            <tr key={user.user_id}>
+                              <td>{user.user_id}</td>
+                              <td>{user.username}</td>
+                              <td>{user.major || '-'}</td>
+                              <td>{user.level}</td>
+                              <td>{user.experience}</td>
+                              <td>{user.is_admin ? '是' : '否'}</td>
+                              <td className={utilStyles.actionCell}>
+                                <button 
+                                  onClick={() => handleSetAdmin(user.user_id, !user.is_admin)}
+                                  className={utilStyles.actionButton}
+                                  disabled={actionLoading}
+                                >
+                                  {user.is_admin ? '取消管理员' : '设为管理员'}
+                                </button>
+                                <button 
+                                  onClick={() => handleDeleteUser(user.user_id)}
+                                  className={`${utilStyles.actionButton} ${utilStyles.deleteButton}`}
+                                  disabled={actionLoading}
+                                >
+                                  删除
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+              
+              {activeTab === 'posts' && (
+                <div className={utilStyles.adminSection}>
+                  <h2 className={utilStyles.sectionTitle}>帖子管理</h2>
+                  <div className={utilStyles.tableContainer}>
+                    <table className={utilStyles.adminTable}>
+                      <thead>
+                        <tr>
+                          <th>ID</th>
+                          <th>标题</th>
+                          <th>作者</th>
+                          <th>发布时间</th>
+                          <th>评论数</th>
+                          <th>操作</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {posts.length === 0 ? (
+                          <tr>
+                            <td colSpan="6" className={utilStyles.emptyRow}>暂无帖子数据</td>
+                          </tr>
+                        ) : (
+                          posts.map(post => (
+                            <tr key={post.post_id}>
+                              <td>{post.post_id}</td>
+                              <td className={utilStyles.titleCell}>{post.title}</td>
+                              <td>{post.username}</td>
+                              <td>{formatDate(post.post_time)}</td>
+                              <td>{post.comment_count}</td>
+                              <td className={utilStyles.actionCell}>
+                                <Link href={`/posts/${post.post_id}`} className={utilStyles.actionButton}>
+                                  查看
+                                </Link>
+                                <button 
+                                  onClick={() => handleDeletePost(post.post_id)}
+                                  className={`${utilStyles.actionButton} ${utilStyles.deleteButton}`}
+                                  disabled={actionLoading}
+                                >
+                                  删除
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+              
+              {activeTab === 'comments' && (
+                <div className={utilStyles.adminSection}>
+                  <h2 className={utilStyles.sectionTitle}>评论管理</h2>
+                  <div className={utilStyles.tableContainer}>
+                    <table className={utilStyles.adminTable}>
+                      <thead>
+                        <tr>
+                          <th>ID</th>
+                          <th>内容</th>
+                          <th>作者</th>
+                          <th>帖子ID</th>
+                          <th>发布时间</th>
+                          <th>操作</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {comments.length === 0 ? (
+                          <tr>
+                            <td colSpan="6" className={utilStyles.emptyRow}>暂无评论数据</td>
+                          </tr>
+                        ) : (
+                          comments.map(comment => (
+                            <tr key={comment.comment_id}>
+                              <td>{comment.comment_id}</td>
+                              <td className={utilStyles.contentCell}>{comment.content}</td>
+                              <td>{comment.username}</td>
+                              <td>{comment.post_id}</td>
+                              <td>{formatDate(comment.create_at)}</td>
+                              <td className={utilStyles.actionCell}>
+                                <Link href={`/posts/${comment.post_id}`} className={utilStyles.actionButton}>
+                                  查看帖子
+                                </Link>
+                                <button 
+                                  onClick={() => handleDeleteComment(comment.comment_id)}
+                                  className={`${utilStyles.actionButton} ${utilStyles.deleteButton}`}
+                                  disabled={actionLoading}
+                                >
+                                  删除
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </main>
       </div>
     </Layout>
-  )
+  );
 }

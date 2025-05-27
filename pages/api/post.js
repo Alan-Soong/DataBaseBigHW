@@ -54,22 +54,31 @@ async function getLikes(targetType, targetId) {
 
 async function addLike(userId, targetType, targetId) {
   const connection = await getConnection();
-  try {
+
+  // 查询是否已点赞
+  const [rows] = await connection.execute(
+    'SELECT like_id FROM Likes WHERE user_id = ? AND target_type = ? AND target_id = ?',
+    [userId, targetType, targetId]
+  );
+
+  if (rows.length > 0) {
+    // 已点赞，执行取消点赞
     await connection.execute(
-      `INSERT INTO Likes (user_id, target_type, target_id, create_at) 
+      'DELETE FROM Likes WHERE user_id = ? AND target_type = ? AND target_id = ?',
+      [userId, targetType, targetId]
+    );
+    return 'unliked';
+  } else {
+    // 未点赞，执行新增点赞
+    await connection.execute(
+      `INSERT INTO Likes (user_id, target_type, target_id, create_at)
        VALUES (?, ?, ?, CURRENT_TIMESTAMP)`,
       [userId, targetType, targetId]
     );
-    return { success: true };
-  } catch (error) {
-    if (error.code === 'ER_DUP_ENTRY') {
-      return { success: false, error: '用户已对该内容点赞' };
-    }
-    throw error;
-  } finally {
-    await connection.end();
+    return 'liked';
   }
 }
+
 
 async function addComment(userId, postId, content) {
   const connection = await getConnection();
@@ -133,10 +142,11 @@ export default async function handler(req, res) {
       const { action, userId, targetType, targetId, postId, content } = req.body;
 
       if (action === 'like') {
-        await addLike(userId, targetType, targetId);
+        const result = await addLike(userId, targetType, targetId);
         const count = await getLikes(targetType, targetId);
-        return res.status(200).json({ count });
+        return res.status(200).json({ result, count });
       }
+
 
       if (action === 'comment') {
         const newComment = await addComment(userId, postId, content);
