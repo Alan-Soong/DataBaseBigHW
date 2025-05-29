@@ -1,0 +1,446 @@
+.error {
+  color: #e74c3c;
+  margin-bottom: 15px;
+  padding: 8px 12px;
+  background-color: rgba(231, 76, 60, 0.1);
+  border-radius: var(--border-radius);
+  border-left: 3px solid #e74c3c;
+}
+
+/* 美化帖子卡片 */
+.postCard {
+  background-color: white;
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  transition: var(--transition);
+  border: 1px solid var(--border-color);
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.postCard:hover {
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  transform: translateY(-3px);
+}
+
+.postCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background-color: var(--primary-color);
+  opacity: 0.7;
+}
+
+.postCardTitle {
+  font-size: 1.4rem;
+  margin: 0 0 10px 0;
+  color: var(--text-color);
+}
+
+.postCardTitle a {
+  color: inherit;
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+.postCardTitle a:hover {
+  color: var(--primary-color);
+}
+
+/* 美化帖子元数据 */
+.postMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  font-size: 0.9rem;
+  color: var(--text-lighter);
+  margin-bottom: 15px;
+}
+
+.postMeta span {
+  display: flex;
+  align-items: center;
+}
+
+.postMeta span::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  background-color: var(--text-lighter);
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+/* 美化帖子内容 */
+.postContent {
+  margin-bottom: 20px;
+  line-height: 1.6;
+  color: var(--text-color);
+  padding: 10px;
+  background-color: var(--bg-light);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+}
+
+/* 美化帖子操作按钮 */
+.postActions {
+  display: flex;
+  gap: 15px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 15px;
+}
+
+.likeButton, .commentButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  color: var(--text-light);
+  font-size: 0.95rem;
+  padding: 8px 12px;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.likeButton:hover, .commentButton:hover {
+  background-color: var(--bg-light);
+  color: var(--primary-color);
+}
+
+.likeButton.active {
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+.likeButton::before {
+  content: '👍';
+  font-size: 1.1rem;
+  margin-right: 5px;
+}
+
+.commentButton::before {
+  content: '💬';
+  font-size: 1.1rem;
+  margin-right: 5px;
+}
+
+/* 美化发帖表单 */
+.newPostForm {
+  background-color: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  padding: 25px;
+  margin-bottom: 30px;
+  animation: fadeIn 0.3s ease-out;
+  border: 1px solid var(--border-color);
+}
+
+.newPostForm h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 1.4rem;
+  color: var(--text-color);
+  border-bottom: 2px solid var(--primary-color);
+  padding-bottom: 10px;
+}
+
+.formGroup {
+  margin-bottom: 20px;
+}
+
+.formGroup label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.formGroup input, 
+.formGroup textarea,
+.formGroup select {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  transition: var(--transition);
+}
+
+.formGroup input:focus, 
+.formGroup textarea:focus,
+.formGroup select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+  outline: none;
+}
+
+.formGroup textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-top: 25px;
+}
+
+.submitButton {
+  padding: 10px 25px;
+  background-color: var(--primary-color);
+  color: blue;
+  border: none;
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.submitButton:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-2px);
+}
+
+.cancelButton {
+  padding: 10px 25px;
+  background-color: transparent;
+  color: var(--text-light);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.cancelButton:hover {
+  background-color: var(--bg-dark);
+  color: var(--text-color);
+}
+
+/* 美化侧边栏 */
+.postSidebar {
+  width: 280px;
+  padding: 25px;
+  background-color: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  margin-right: 25px;
+  position: sticky;
+  top: 20px;
+  height: fit-content;
+  border: 1px solid var(--border-color);
+}
+
+.sidebarTitle {
+  font-size: 1.3rem;
+  margin-top: 0;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--primary-color);
+  color: var(--text-color);
+}
+
+.sidebarMenu {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 25px 0;
+}
+
+.sidebarMenu li {
+  margin-bottom: 12px;
+}
+
+.sidebarMenu a {
+  display: block;
+  padding: 10px 15px;
+  border-radius: var(--border-radius);
+  transition: var(--transition);
+  color: var(--text-color);
+  text-decoration: none;
+  border-left: 3px solid transparent;
+}
+
+.sidebarMenu a:hover, .sidebarMenu a.active {
+  background-color: var(--bg-light);
+  color: var(--primary-color);
+  border-left-color: var(--primary-color);
+  transform: translateX(5px);
+}
+
+.sidebarSection {
+  margin-top: 30px;
+}
+
+.sidebarSection h4 {
+  font-size: 1.1rem;
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: var(--text-color);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* 美化用户信息 */
+.userInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 15px;
+  background-color: var(--bg-light);
+  border-radius: var(--border-radius);
+}
+
+.avatar {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background-color: var(--primary-color);
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.8rem;
+  font-weight: bold;
+  margin-bottom: 15px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+  border: 3px solid white;
+}
+
+.userInfo span {
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.userLevel, .userExp {
+  font-size: 0.9rem;
+  color: var(--text-lighter);
+  margin-top: 5px;
+  background-color: white;
+  padding: 4px 10px;
+  border-radius: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* 美化加载状态 */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 30px;
+  color: var(--text-lighter);
+  font-size: 1rem;
+}
+
+.loading::after {
+  content: " ";
+  display: block;
+  width: 30px;
+  height: 30px;
+  margin-left: 15px;
+  border-radius: 50%;
+  border: 4px solid var(--primary-color);
+  border-color: var(--primary-color) transparent var(--primary-color) transparent;
+  animation: loading 1.2s linear infinite;
+}
+
+/* 美化空状态 */
+.emptyState {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-lighter);
+  background-color: var(--bg-light);
+  border-radius: var(--border-radius);
+  border: 1px dashed var(--border-color);
+}
+
+.emptyState p {
+  margin-bottom: 20px;
+  font-size: 1.1rem;
+}
+
+.createButton {
+  padding: 10px 20px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.createButton:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-2px);
+}
+
+/* 美化提示信息 */
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 15px 25px;
+  background-color: var(--primary-color);
+  color: white;
+  border-radius: var(--border-radius);
+  box-shadow: 0 3px 15px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  animation: slideIn 0.3s ease-out, fadeOut 0.5s ease-out 2.5s forwards;
+  font-weight: 500;
+}
+
+/* 响应式设计增强 */
+@media (max-width: 768px) {
+  .postContainer {
+    flex-direction: column;
+  }
+  
+  .postSidebar {
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 20px;
+    position: static;
+  }
+  
+  .userInfo {
+    flex-direction: row;
+    align-items: center;
+    gap: 15px;
+    padding: 10px;
+  }
+  
+  .avatar {
+    margin-bottom: 0;
+    width: 50px;
+    height: 50px;
+    font-size: 1.3rem;
+  }
+  
+  .postMeta {
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .postActions {
+    justify-content: space-between;
+  }
+  
+  .formActions {
+    flex-direction: column;
+  }
+  
+  .submitButton, .cancelButton {
+    width: 100%;
+  }
+}

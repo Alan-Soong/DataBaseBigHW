@@ -14,6 +14,9 @@ export default function UserProfile() {
   const [isFollowing, setIsFollowing] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [visibilitySettings, setVisibilitySettings] = useState({});
+  const [showVisibilityModal, setShowVisibilityModal] = useState(false);
+  const [editingField, setEditingField] = useState(null);
 
   // 获取当前登录用户信息
   useEffect(() => {
@@ -31,6 +34,11 @@ export default function UserProfile() {
           
           // 检查是否已关注该用户
           checkRelationStatus(data.user.user_id, id);
+          
+          // 如果查看的是自己的资料，获取可见性设置
+          if (data.user.user_id === parseInt(id)) {
+            fetchVisibilitySettings(data.user.user_id);
+          }
         }
       } catch (error) {
         console.error('获取当前用户信息失败:', error);
@@ -67,6 +75,30 @@ export default function UserProfile() {
       fetchUserProfile();
     }
   }, [id]);
+
+  // 获取可见性设置
+  const fetchVisibilitySettings = async (userId) => {
+    try {
+      const res = await fetch(`/api/profileVisibility?userId=${userId}`);
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      
+      const data = await res.json();
+      if (data.success) {
+        // 将设置转换为更易于使用的格式
+        const settings = {};
+        data.settings.forEach(setting => {
+          settings[setting.field_name] = {
+            visibleToAdminOnly: setting.visible_to_admin_only === 1,
+            visibleToFollowersOnly: setting.visible_to_followers_only === 1,
+            visibleToAll: setting.visible_to_all === 1
+          };
+        });
+        setVisibilitySettings(settings);
+      }
+    } catch (error) {
+      console.error('获取可见性设置失败:', error);
+    }
+  };
 
   // 检查关注和拉黑状态
   const checkRelationStatus = async (currentUserId, targetUserId) => {
@@ -107,6 +139,8 @@ export default function UserProfile() {
       const data = await res.json();
       if (data.success) {
         setIsFollowing(!isFollowing);
+        // 更新用户资料以反映关注状态变化
+        fetchUserProfile();
       } else {
         alert(data.message);
       }
@@ -149,6 +183,44 @@ export default function UserProfile() {
     }
   };
 
+  // 打开可见性设置模态框
+  const openVisibilityModal = (fieldName) => {
+    setEditingField(fieldName);
+    setShowVisibilityModal(true);
+  };
+
+  // 更新可见性设置
+  const updateVisibilitySetting = async (setting) => {
+    if (!currentUser || !editingField) return;
+    
+    try {
+      const res = await fetch('/api/profileVisibility', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: currentUser.user_id,
+          fieldName: editingField,
+          ...setting
+        })
+      });
+      
+      const data = await res.json();
+      if (data.success) {
+        // 更新本地状态
+        setVisibilitySettings(prev => ({
+          ...prev,
+          [editingField]: setting
+        }));
+        setShowVisibilityModal(false);
+      } else {
+        alert(data.message || '更新失败');
+      }
+    } catch (error) {
+      console.error('更新可见性设置失败:', error);
+      alert('操作失败，请稍后重试');
+    }
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -158,135 +230,96 @@ export default function UserProfile() {
     });
   };
 
+  // 判断字段是否应该显示
+  const shouldShowField = (fieldName) => {
+    // 如果是自己的资料，显示所有字段
+    if (currentUser && currentUser.user_id === parseInt(id)) {
+      return true;
+    }
+    
+    // 如果没有设置，默认显示
+    if (!visibilitySettings[fieldName]) {
+      return true;
+    }
+    
+    const setting = visibilitySettings[fieldName];
+    
+    // 如果设置为对所有人可见
+    if (setting.visibleToAll) {
+      return true;
+    }
+    
+    // 如果设置为仅对管理员可见，且当前用户是管理员
+    if (setting.visibleToAdminOnly && currentUser && currentUser.is_admin) {
+      return true;
+    }
+    
+    // 如果设置为仅对关注者可见，且当前用户已关注
+    if (setting.visibleToFollowersOnly && isFollowing) {
+      return true;
+    }
+    
+    return false;
+  };
+
   return (
     <Layout>
-      <Head>
-        <title>{userProfile ? `${userProfile.username}的个人主页` : '用户主页'}</title>
-      </Head>
-      
+      <Head><title>个人主页 - {userProfile?.username}</title></Head>
       <div className={utilStyles.profileContainer}>
-        <div className={utilStyles.profileSidebar}>
-          <h3 className={utilStyles.sidebarTitle}>导航</h3>
-          <ul className={utilStyles.sidebarMenu}>
-            <li><Link href="/">返回首页</Link></li>
-            <li>
-              <Link href={{
-                pathname: '/posts/user_mode',
-                query: { username: router.query.username }
-              }}>
-                返回论坛
-              </Link>
-            </li>
-          </ul>
-          
-          {currentUser && (
-            <div className={utilStyles.sidebarSection}>
-              <h4>当前用户</h4>
-              <div className={utilStyles.userInfo}>
-                <div className={utilStyles.avatar}>
-                  {currentUser.username?.charAt(0) || '?'}
-                </div>
-                <span>{currentUser.username}</span>
-                <div className={utilStyles.userLevel}>
-                  等级: {currentUser.level || 1}
-                </div>
-              </div>
+        {/* 1. 基础信息区 */}
+        <div className={utilStyles.profileBase}>
+          <div className={utilStyles.profileAvatar}>
+            {userProfile?.username?.charAt(0)}
+          </div>
+          <div className={utilStyles.profileInfo}>
+            <div className={utilStyles.infoBlock}>
+              <h1>{userProfile?.username}</h1>
             </div>
+            <div className={utilStyles.infoBlock}>等级：{userProfile?.level_name}（{userProfile?.level}）</div>
+            <div className={utilStyles.infoBlock}>经验值：{userProfile?.experience}</div>
+            <div className={utilStyles.infoBlock}>专业：{userProfile?.major || '未填写'}</div>
+          </div>
+        </div>
+
+        {/* 2. 统计信息区 */}
+        <div className={utilStyles.profileStats}>
+          <div className={utilStyles.statBlock}>发帖数：{userProfile?.post_count}</div>
+          <div className={utilStyles.statBlock}>评论数：{userProfile?.comment_count}</div>
+          <div className={utilStyles.statBlock}>获赞数：{userProfile?.like_count}</div>
+          <div className={utilStyles.statBlock}>关注：{userProfile?.following_count}</div>
+          <div className={utilStyles.statBlock}>粉丝：{userProfile?.follower_count}</div>
+        </div>
+
+        {/* 3. 操作区 */}
+        <div className={utilStyles.profileActions}>
+          {currentUser && currentUser.user_id !== parseInt(id) && (
+            <>
+              <button onClick={handleFollowAction} disabled={actionLoading}>
+                {isFollowing ? '取消关注' : '关注'}
+              </button>
+              <button onClick={handleBlockAction} disabled={actionLoading}>
+                {isBlocked ? '取消拉黑' : '拉黑'}
+              </button>
+            </>
           )}
         </div>
-        
-        <main className={utilStyles.profileMain}>
-          {loading ? (
-            <div className={utilStyles.loading}>加载中...</div>
-          ) : userProfile ? (
-            <>
-              <div className={utilStyles.profileHeader}>
-                <div className={utilStyles.profileAvatar}>
-                  {userProfile.username.charAt(0)}
-                </div>
-                <div className={utilStyles.profileInfo}>
-                  <h1 className={utilStyles.profileName}>{userProfile.username}</h1>
-                  <div className={utilStyles.profileMeta}>
-                    <span>等级: {userProfile.level_name} ({userProfile.level})</span>
-                    <span>经验值: {userProfile.experience}</span>
-                    {userProfile.major && <span>专业: {userProfile.major}</span>}
-                  </div>
-                  
-                  {currentUser && currentUser.user_id !== parseInt(id) && (
-                    <div className={utilStyles.profileActions}>
-                      <button 
-                        onClick={handleFollowAction}
-                        className={`${utilStyles.actionButton} ${isFollowing ? utilStyles.following : ''}`}
-                        disabled={actionLoading}
-                      >
-                        {isFollowing ? '已关注' : '关注'}
-                      </button>
-                      <button 
-                        onClick={handleBlockAction}
-                        className={`${utilStyles.actionButton} ${isBlocked ? utilStyles.blocked : ''}`}
-                        disabled={actionLoading}
-                      >
-                        {isBlocked ? '已拉黑' : '拉黑'}
-                      </button>
-                    </div>
-                  )}
-                </div>
+
+        {/* 4. 最近发帖区 */}
+        <div className={utilStyles.profileRecentPosts}>
+          <h2>最近发布的帖子</h2>
+          {userProfile?.recent_posts?.length > 0 ? (
+            userProfile.recent_posts.map(post => (
+              <div key={post.post_id} className={utilStyles.recentPostItem}>
+                <Link href={`/posts/${post.post_id}`}>{post.title}</Link>
+                <span>{formatDate(post.post_time)}</span>
+                <span>评论：{post.comment_count}</span>
+                <span>点赞：{post.like_count}</span>
               </div>
-              
-              <div className={utilStyles.profileStats}>
-                <div className={utilStyles.statItem}>
-                  <div className={utilStyles.statValue}>{userProfile.post_count}</div>
-                  <div className={utilStyles.statLabel}>发帖数</div>
-                </div>
-                <div className={utilStyles.statItem}>
-                  <div className={utilStyles.statValue}>{userProfile.comment_count}</div>
-                  <div className={utilStyles.statLabel}>评论数</div>
-                </div>
-                <div className={utilStyles.statItem}>
-                  <div className={utilStyles.statValue}>{userProfile.like_count}</div>
-                  <div className={utilStyles.statLabel}>获赞数</div>
-                </div>
-                <div className={utilStyles.statItem}>
-                  <div className={utilStyles.statValue}>{userProfile.following_count}</div>
-                  <div className={utilStyles.statLabel}>关注</div>
-                </div>
-                <div className={utilStyles.statItem}>
-                  <div className={utilStyles.statValue}>{userProfile.follower_count}</div>
-                  <div className={utilStyles.statLabel}>粉丝</div>
-                </div>
-              </div>
-              
-              <div className={utilStyles.profileContent}>
-                <h2 className={utilStyles.sectionTitle}>最近发布的帖子</h2>
-                {userProfile.recent_posts && userProfile.recent_posts.length > 0 ? (
-                  <div className={utilStyles.recentPosts}>
-                    {userProfile.recent_posts.map(post => (
-                      <div key={post.post_id} className={utilStyles.postItem}>
-                        <h3 className={utilStyles.postTitle}>
-                          <Link href={`/posts/${post.post_id}`}>
-                            {post.title}
-                          </Link>
-                        </h3>
-                        <div className={utilStyles.postMeta}>
-                          <span>发布于: {formatDate(post.post_time)}</span>
-                          <span>评论: {post.comment_count}</span>
-                          <span>点赞: {post.like_count}</span>
-                        </div>
-                        <div className={utilStyles.postExcerpt}>
-                          {post.content.length > 100 ? `${post.content.substring(0, 100)}...` : post.content}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className={utilStyles.emptyState}>暂无发帖</div>
-                )}
-              </div>
-            </>
+            ))
           ) : (
-            <div className={utilStyles.errorState}>用户不存在或已被删除</div>
+            <div>暂无发帖</div>
           )}
-        </main>
+        </div>
       </div>
     </Layout>
   );

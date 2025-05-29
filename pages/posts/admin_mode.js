@@ -4,12 +4,15 @@ import Layout from '../../components/layout';
 import utilStyles from '../../styles/utils.module.css';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
+import styles from '../../styles/admin.module.css';
 
 export default function AdminMode() {
   const router = useRouter();
   const [users, setUsers] = useState([]);
   const [posts, setPosts] = useState([]);
   const [comments, setComments] = useState([]);
+  const [sections, setSections] = useState([]);
+  const [newSectionName, setNewSectionName] = useState('');
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('users');
@@ -20,11 +23,20 @@ export default function AdminMode() {
     const fetchCurrentUser = async () => {
       try {
         const { username } = router.query;
-        if (!username) return;
+        if (!username || typeof username !== 'string') { // 加强参数验证
+          router.push('/');
+          return;
+        }
 
-        const res = await fetch(`/api/auth/session?username=${encodeURIComponent(username)}`);
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        
+        const res = await fetch(`/api/auth/session?username=${encodeURIComponent(username)}`,{credentials: 'include'});
+        if (!res.ok) {
+          if (res.status === 401) {
+            router.push('/login'); // 跳转到登录页
+            return;
+          }
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+
         const data = await res.json();
         if (data.user) {
           setCurrentUser(data.user);
@@ -60,10 +72,18 @@ export default function AdminMode() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await fetch('/api/admin/users');
+        const res = await fetch(`/api/admin/users?userId=${currentUser.user_id}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
+          }
+        });
         const data = await res.json();
         if (data.success) {
           setUsers(data.users);
+        } else {
+          console.error('获取失败:', data.message);
         }
       } catch (error) {
         console.error('获取用户列表失败:', error);
@@ -110,6 +130,27 @@ export default function AdminMode() {
 
     if (!loading && currentUser && activeTab === 'comments') {
       fetchComments();
+    }
+  }, [loading, currentUser, activeTab]);
+
+  // 新增：获取所有频道
+  useEffect(() => {
+    const fetchSections = async () => {
+      try {
+        const res = await fetch('/api/sections');
+        const data = await res.json();
+        if (data.success) {
+          setSections(data.sections);
+        } else {
+          console.error('获取频道列表失败:', data.message);
+        }
+      } catch (error) {
+        console.error('获取频道列表失败:', error);
+      }
+    };
+
+    if (!loading && currentUser && activeTab === 'sections') {
+      fetchSections();
     }
   }, [loading, currentUser, activeTab]);
 
@@ -227,6 +268,72 @@ export default function AdminMode() {
     }
   };
 
+  // 新增：处理删除频道
+  const handleDeleteSection = async (sectionId) => {
+    if (!confirm('确定要删除该频道吗？此操作不可撤销，将同时删除该频道下的所有帖子、评论和点赞。')) {
+      return;
+    }
+    
+    setActionLoading(true);
+    try {
+      const res = await fetch('/api/admin/deleteSection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sectionId })
+      });
+      
+      const data = await res.json();
+      if (data.success) {
+        setSections(sections.filter(section => section.section_id !== sectionId));
+        alert('频道删除成功');
+      } else {
+        alert(data.message || '删除失败');
+      }
+    } catch (error) {
+      console.error('删除频道失败:', error);
+      alert('操作失败，请稍后重试');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // 新增：处理添加频道
+  const handleAddSection = async (e) => {
+    e.preventDefault();
+    if (!newSectionName.trim()) {
+      alert('频道名称不能为空');
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      const res = await fetch('/api/admin/addSection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sectionName: newSectionName })
+      });
+      
+      const data = await res.json();
+      if (data.success) {
+        // 重新获取频道列表以更新界面
+        const fetchRes = await fetch('/api/sections');
+        const fetchData = await fetchRes.json();
+        if(fetchData.success) {
+          setSections(fetchData.sections);
+        }
+        setNewSectionName(''); // 清空输入框
+        alert('频道添加成功');
+      } else {
+        alert(data.message || '添加失败');
+      }
+    } catch (error) {
+      console.error('添加频道失败:', error);
+      alert('操作失败，请稍后重试');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -245,43 +352,12 @@ export default function AdminMode() {
       <div className={utilStyles.adminContainer}>
         <div className={utilStyles.adminSidebar}>
           <h3 className={utilStyles.sidebarTitle}>管理菜单</h3>
-          <ul className={utilStyles.sidebarMenu}>
-            <li>
-              <a 
-                href="#" 
-                className={activeTab === 'users' ? utilStyles.active : ''}
-                onClick={(e) => {e.preventDefault(); setActiveTab('users');}}
-              >
-                用户管理
-              </a>
-            </li>
-            <li>
-              <a 
-                href="#" 
-                className={activeTab === 'posts' ? utilStyles.active : ''}
-                onClick={(e) => {e.preventDefault(); setActiveTab('posts');}}
-              >
-                帖子管理
-              </a>
-            </li>
-            <li>
-              <a 
-                href="#" 
-                className={activeTab === 'comments' ? utilStyles.active : ''}
-                onClick={(e) => {e.preventDefault(); setActiveTab('comments');}}
-              >
-                评论管理
-              </a>
-            </li>
-            <li>
-              <Link href={{
-                pathname: '/posts/user_mode',
-                query: { username: router.query.username }
-              }}>
-                返回论坛
-              </Link>
-            </li>
-          </ul>
+          <div className={styles.adminMenu}>
+            <button onClick={() => setActiveTab('users')} className={styles.menuButton}>用户管理</button>
+            <button onClick={() => setActiveTab('posts')} className={styles.menuButton}>帖子管理</button>
+            <button onClick={() => setActiveTab('comments')} className={styles.menuButton}>评论管理</button>
+            <button onClick={() => setActiveTab('sections')} className={styles.menuButton}>频道管理</button>
+          </div>
           
           {currentUser && (
             <div className={utilStyles.sidebarSection}>
@@ -441,6 +517,61 @@ export default function AdminMode() {
                                 </Link>
                                 <button 
                                   onClick={() => handleDeleteComment(comment.comment_id)}
+                                  className={`${utilStyles.actionButton} ${utilStyles.deleteButton}`}
+                                  disabled={actionLoading}
+                                >
+                                  删除
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+              
+              {activeTab === 'sections' && (
+                <div className={utilStyles.adminSection}>
+                  <h2 className={utilStyles.sectionTitle}>频道管理</h2>
+                  
+                  <form onSubmit={handleAddSection} className={utilStyles.addForm}>
+                    <input
+                      type="text"
+                      placeholder="新频道名称"
+                      value={newSectionName}
+                      onChange={(e) => setNewSectionName(e.target.value)}
+                      className={utilStyles.addInput}
+                      disabled={actionLoading}
+                    />
+                    <button type="submit" className={utilStyles.addButton} disabled={actionLoading}>
+                      添加频道
+                    </button>
+                  </form>
+
+                  <div className={utilStyles.tableContainer}>
+                    <table className={utilStyles.adminTable}>
+                      <thead>
+                        <tr>
+                          <th>ID</th>
+                          <th>频道名称</th>
+                          <th>操作</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {sections.length === 0 ? (
+                          <tr>
+                            <td colSpan="3" className={utilStyles.emptyRow}>暂无频道数据</td>
+                          </tr>
+                        ) : (
+                          sections.map(section => (
+                            <tr key={section.section_id}>
+                              <td>{section.section_id}</td>
+                              <td>{section.section_name}</td>
+                              <td className={utilStyles.actionCell}>
+                                <button 
+                                  onClick={() => handleDeleteSection(section.section_id)}
                                   className={`${utilStyles.actionButton} ${utilStyles.deleteButton}`}
                                   disabled={actionLoading}
                                 >

@@ -15,13 +15,13 @@ export default async function handler(req, res) {
       // 如果没有频道，创建默认频道
       if (sections.length === 0) {
         const defaultSections = await createDefaultSections();
-        return res.status(200).json({ sections: defaultSections });
+        return res.status(200).json({ success: true, sections: defaultSections });
       }
       
-      return res.status(200).json({ sections });
+      return res.status(200).json({ success: true, sections });
     } catch (error) {
       console.error('获取频道失败:', error);
-      return res.status(500).json({ message: '服务器错误' });
+      return res.status(500).json({ success: false, message: '服务器错误' });
     }
   } else if (req.method === 'POST') {
     // 创建新频道

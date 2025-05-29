@@ -1,115 +1,35 @@
-.heading2Xl {
-  font-size: 2.5rem;
-  line-height: 1.2;
-  font-weight: 800;
-  letter-spacing: -0.05rem;
-  margin: 1rem 0;
-}
-
-.headingXl {
-  font-size: 2rem;
-  line-height: 1.3;
-  font-weight: 800;
-  letter-spacing: -0.05rem;
-  margin: 1rem 0;
-}
-
-.headingLg {
-  font-size: 1.5rem;
-  line-height: 1.4;
-  margin: 1rem 0;
-}
-
-.headingMd {
-  font-size: 1.2rem;
-  line-height: 1.5;
-}
-
-.borderCircle {
-  border-radius: 9999px;
-}
-
-.colorInherit {
-  color: inherit;
-}
-
-.padding1px {
-  padding-top: 1px;
-}
-
-.list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.listItem {
-  margin: 0 0 1.25rem;
-}
-
-.lightText {
-  color: #999;
-}
-
-/* 按钮样式的设计 */
-.buttonContainer {
-  margin-top: 30px;
-  display: flex;
-  justify-content: center;
-  /* 居中 */
-  gap: 20px;
-  /* 两个按钮之间间距 */
-}
-
-.button {
-  padding: 12px 24px;
-  font-size: 16px;
-  cursor: pointer;
-  background-color: #0070f3;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-  justify-content: center;
-  /* display: flex; */
-}
-
-.button:hover {
-  background-color: #005bb5;
-  transform: scale(1.05);
-}
-
-/* 以下样式应添加到 styles/utils.module.css 的末尾 */
-/* 如果已有同名类（如 postContainer），请使用新类名或合并样式 */
-
 .postContainer {
   display: flex;
-  min-height: 100vh;
-  /* 确保容器充满视口高度 */
-  width: 100%;
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 10px;
+  min-height: calc(100vh - 100px);
+  background-color: var(--bg-color);
+  margin-top: 20px;
 }
 
 .postSidebar {
   width: 250px;
-  background-color: #f4f4f4;
   padding: 20px;
-  border-right: 1px solid #ddd;
-  flex-shrink: 0;
-  /* 防止边栏被压缩 */
+  background-color: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  margin-right: 20px;
+  position: sticky;
+  top: 20px;
+  height: fit-content;
 }
 
 .sidebarTitle {
-  font-size: 1.5rem;
-  margin-bottom: 0px;
-  color: #333;
+  font-size: 1.2rem;
+  margin-top: 0;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-color);
 }
 
 .sidebarMenu {
   list-style: none;
-  padding: 0px;
+  padding: 0;
+  margin: 0 0 20px 0;
 }
 
 .sidebarMenu li {
@@ -117,330 +37,645 @@
 }
 
 .sidebarMenu a {
+  display: block;
+  padding: 8px 12px;
+  border-radius: var(--border-radius);
+  transition: var(--transition);
+  color: var(--text-color);
   text-decoration: none;
-  color: #0070f3;
-  font-size: 1rem;
 }
 
-.sidebarMenu a:hover {
-  text-decoration: underline;
+.sidebarMenu a:hover, .sidebarMenu a.active {
+  background-color: var(--bg-light);
+  color: var(--primary-color);
+  transform: translateX(5px);
+}
+
+.sidebarSection {
+  margin-top: 25px;
+}
+
+.sidebarSection h4 {
+  font-size: 1rem;
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: var(--text-light);
+}
+
+.userInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: var(--primary-color);
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.userLevel, .userExp {
+  font-size: 0.9rem;
+  color: var(--text-lighter);
+  margin-top: 5px;
+}
+
+.loginPrompt {
+  text-align: center;
+  padding: 15px;
+}
+
+.loginButton {
+  margin-top: 10px;
+  padding: 8px 16px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.loginButton:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-2px);
 }
 
 .postMain {
   flex: 1;
-  /* 占据剩余空间 */
   padding: 20px;
-  background-color: #fff;
+  background-color: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
 }
 
 .postTitle {
-  font-size: 2rem;
+  font-size: 1.8rem;
+  margin-top: 0;
   margin-bottom: 20px;
+  color: var(--text-color);
+  border-bottom: 2px solid var(--primary-color);
+  padding-bottom: 10px;
 }
 
-.note {
-  font-size: 1.25rem;
-  color: #d32f2f;
-  /* 红色提示 */
-  margin-bottom: 20px;
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
 }
 
-.placeholder {
+.postList {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.postCard {
+  background-color: white;
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   padding: 20px;
-  background-color: #fafafa;
-  border: 1px dashed #ccc;
-  text-align: center;
-  color: #666;
+  transition: var(--transition);
+  border: 1px solid var(--border-color);
 }
 
-/* 以下样式应添加到 styles/utils.module.css 的末尾 */
-/* 注意：如果已有 modalOverlay、modalContent 等类名，请合并或重命名以避免冲突 */
+.postCard:hover {
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  transform: translateY(-3px);
+}
 
-.modalOverlay {
+.postHeader {
+  margin-bottom: 15px;
+}
+
+.postCardTitle {
+  font-size: 1.4rem;
+  margin: 0 0 10px 0;
+  color: var(--text-color);
+}
+
+.postMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  font-size: 0.9rem;
+  color: var(--text-lighter);
+}
+
+.postContent {
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.postActions {
+  display: flex;
+  gap: 15px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 15px;
+}
+
+.likeButton, .commentButton {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  color: var(--text-light);
+  font-size: 0.95rem;
+  padding: 8px 12px;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.likeButton:hover, .commentButton:hover {
+  background-color: var(--bg-light);
+  color: var(--primary-color);
+}
+
+.likeButton.active {
+  color: var(--primary-color);
+}
+
+.commentsSection {
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px dashed var(--border-color);
+}
+
+.commentsSection h3 {
+  font-size: 1.2rem;
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: var(--text-color);
+}
+
+.commentForm {
+  margin-bottom: 20px;
+}
+
+.commentForm textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  resize: vertical;
+  margin-bottom: 10px;
+  transition: var(--transition);
+}
+
+.commentForm textarea:focus {
+  border-color: var(--primary-color);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.submitCommentButton {
+  padding: 8px 16px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.submitCommentButton:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-2px);
+}
+
+.commentsList {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.commentItem {
+  background-color: var(--bg-light);
+  border-radius: var(--border-radius);
+  padding: 15px;
+  transition: var(--transition);
+}
+
+.commentItem:hover {
+  background-color: #f0f0f0;
+}
+
+.commentHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.commentAuthor {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.commentAvatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: var(--primary-color);
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+.commentDate {
+  font-size: 0.85rem;
+  color: var(--text-lighter);
+}
+
+.commentContent {
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+
+.commentActions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-lighter);
+  background-color: var(--bg-light);
+  border-radius: var(--border-radius);
+}
+
+.emptyComments {
+  text-align: center;
+  padding: 20px;
+  color: var(--text-lighter);
+  font-style: italic;
+}
+
+.createButton {
+  margin-top: 15px;
+  padding: 10px 20px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.createButton:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-2px);
+}
+
+/* 发帖表单样式 */
+.newPostForm {
+  background-color: var(--bg-light);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  margin-bottom: 30px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.newPostForm h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 1.4rem;
+  color: var(--text-color);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 10px;
+}
+
+.formGroup {
+  margin-bottom: 15px;
+}
+
+.formGroup label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.submitButton {
+  padding: 10px 20px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.submitButton:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-2px);
+}
+
+.cancelButton {
+  padding: 10px 20px;
+  background-color: transparent;
+  color: var(--text-light);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.cancelButton:hover {
+  background-color: var(--bg-dark);
+  color: var(--text-color);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .postContainer {
+    flex-direction: column;
+  }
+  
+  .postSidebar {
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 20px;
+    position: static;
+  }
+  
+  .userInfo {
+    flex-direction: row;
+    align-items: center;
+    gap: 15px;
+  }
+  
+  .avatar {
+    margin-bottom: 0;
+  }
+  
+  .postMeta {
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .postActions {
+    justify-content: space-between;
+  }
+}
+
+/* 返回顶部按钮 */
+.backToTop {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  box-shadow: var(--box-shadow);
+  transition: var(--transition);
+  opacity: 0;
+  visibility: hidden;
+}
+
+.backToTop.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.backToTop:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-5px);
+}
+
+/* 退出确认对话框 */
+.confirmDialog {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.5);
-  /* 半透明遮罩 */
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
 }
 
-.modalContent {
-  background-color: #fff;
+.dialogContent {
+  background-color: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
   padding: 20px;
-  border-radius: 8px;
-  width: 400px;
-  max-width: 90%;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
 }
 
-.modalTitle {
-  font-size: 1.5rem;
+.dialogTitle {
+  font-size: 1.2rem;
+  margin-top: 0;
   margin-bottom: 15px;
-  color: #333;
+  color: var(--text-color);
 }
 
-.modalForm {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
+.dialogMessage {
   margin-bottom: 20px;
+  color: var(--text-light);
 }
 
-.input {
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
-}
-
-.modalClose {
-  background-color: #d32f2f;
-  /* 红色关闭按钮 */
-  color: #fff;
-}
-
-.modalClose:hover {
-  background-color: #b71c1c;
-}
-
-.buttonGroup {
+.dialogActions {
   display: flex;
   justify-content: center;
-  gap: 1rem;
-  margin-top: 1rem;
+  gap: 15px;
 }
 
-.errorText {
-  color: red;
-  margin-top: 0.5rem;
+.confirmButton {
+  padding: 8px 16px;
+  background-color: var(--danger-color);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: var(--transition);
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  .postContainer {
+.confirmButton:hover {
+  background-color: var(--danger-hover);
+}
+
+.cancelDialogButton {
+  padding: 8px 16px;
+  background-color: var(--bg-dark);
+  color: var(--text-color);
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.cancelDialogButton:hover {
+  background-color: var(--border-color);
+}
+
+/* 个人主页整体容器 */
+.profileContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 0;
+  background: #f7f8fa;
+  min-height: 100vh;
+}
+
+/* 基础信息区 */
+.profileBase {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.profileAvatar {
+  width: 96px;
+  height: 96px;
+  background: #e3eaf1;
+  border-radius: 50%;
+  font-size: 48px;
+  color: #4a90e2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.profileInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.infoBlock {
+  background: #fff;
+  border-radius: 12px;
+  padding: 12px 32px;
+  margin: 4px 0;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  min-width: 220px;
+  text-align: center;
+  font-size: 18px;
+}
+
+/* 统计信息区 */
+.profileStats {
+  display: flex;
+  gap: 16px;
+  margin: 24px 0;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.statBlock {
+  background: #f0f4f8;
+  border-radius: 10px;
+  padding: 10px 24px;
+  min-width: 120px;
+  text-align: center;
+  font-size: 16px;
+  margin: 4px 0;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+}
+
+/* 操作按钮区 */
+.profileActions {
+  margin: 16px 0 32px 0;
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+.profileActions button,
+.actionButton {
+  background: #4a90e2;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 24px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.profileActions button:disabled,
+.actionButton:disabled {
+  background: #b0c4de;
+  cursor: not-allowed;
+}
+
+/* 最近发帖区 */
+.profileRecentPosts {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 8px rgba(0,0,0,0.04);
+  padding: 24px;
+}
+.recentPostItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-bottom: 1px solid #f0f0f0;
+  padding: 12px 0;
+}
+.recentPostItem:last-child {
+  border-bottom: none;
+}
+
+@media (max-width: 600px) {
+  .profileStats {
     flex-direction: column;
+    gap: 8px;
   }
-
-  .postSidebar {
-    width: 100%;
-    border-right: none;
-    border-bottom: 1px solid #ddd;
-    margin-bottom: 10px;
-  }
-
-  .postMain {
-    padding: 10px;
-  }
-
-  /* 帖子容器（移动到媒体查询外部） */
-  .postContainer {
-    max-width: 80px;
-    margin: 0 auto;
-    padding: 10px;
-    display: flex;
-    min-height: 10vh;
-    width: 100%;
-  }
-  
-  /* 帖子卡片（合并重复定义） */
-  .postCard {
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    padding: 24px;
-    margin-bottom: 30px;
-  }
-  
-  /* 评论区（删除重复定义） */
-  .commentsTitle {
-    font-size: 20px;
-    color: #1a1a1a;
-    padding-bottom: 12px;
-    border-bottom: 1px solid #ebebeb;
-  }
-  
-  .commentForm {
-    background: #f8f9fa;
-    border-radius: 8px;
-    padding: 10px;
-    margin-bottom: 24px;
-  }
-  
-  /* 修复响应式部分 */
-  @media (max-width: 768px) {
-    .postContainer {
-      flex-direction: column;
-    }
-  
-    .postSidebar {
-      width: 100%;
-      border-right: none;
-      border-bottom: 1px solid #ddd;
-      margin-bottom: 20px;
-    }
-  
-    /* 删除重复的.postCard定义 */
-    .commentItem {
-      background-color: #fff; /* 统一背景色 */
-      padding: 10px; /* 统一内边距 */
-    }
-    
-    /* 删除其他重复样式定义 */
-  }
-  
-  .postCardTitle {
-    font-size: 24px;
-    color: #1a1a1a;
-    margin-bottom: 10px;
-    line-height: 1.4;
-  }
-  
-  .postMeta {
-    display: flex;
-    align-items: center;
-    color: #8590a6;
-    font-size: 14px;
-    margin-bottom: 20px;
-  }
-  
-  .divider {
-    margin: 0 8px;
-  }
-  
-  .postContent {
-    white-space: pre-wrap;
-    font-size: 16px;
-    line-height: 1.8;
-    color: #1a1a1a;
-    margin-bottom: 20px;
-  }
-  
-  /* 点赞按钮 */
-  .likeButton {
-    display: flex;
-    align-items: center;
-    padding: 8px 16px;
-    background: #f6f6f6;
-    border: none;
-    border-radius: 20px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  
-  .likeButton:hover {
-    background: #e5e5e5;
-  }
-  
-  .likeIcon {
-    margin-right: 6px;
-    font-size: 16px;
-  }
-  
-  /* 评论区 */
-  .commentsTitle {
-    font-size: 20px;
-    color: #1a1a1a;
-    margin-bottom: 24px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid #ebebeb;
-  }
-  
-  .commentsSection {
-    margin-top: 1rem;
-  }
-  
-  .commentForm {
-    background: #f8f9fa;
-    border-radius: 8px;
-    padding: 16px;
-    margin-bottom: 24px;
-  }
-  
-  .commentForm textarea {
-    width: 100%;
-    padding: 0.5rem;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    resize: vertical;
-    margin-bottom: 0.5rem;
-  }
-  
-  .commentForm button {
-    background-color: #0366d6;
-    color: white;
-    padding: 0.4rem 0.8rem;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-  }
-  
-  .commentForm button:hover {
-    background-color: #024a9c;
-  }
-  
-  .commentItem {
-    background-color: #f5f5f5;
-    padding: 0.8rem;
-    border-radius: 6px;
-    margin-top: 0.5rem;
-  }
-  
-  .commentHeader {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.9rem;
-    color: #555;
-  }
-  
-  .commentAvatar {
-    background-color: #666;
-    color: white;
-    border-radius: 50%;
-    width: 24px;
-    height: 24px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.8rem;
-    margin-right: 0.4rem;
-  }
-  
-  .commentContent {
-    margin-top: 0.4rem;
-    font-size: 1rem;
-  }
-  
-  .commentActions button {
-    background: none;
-    border: none;
-    color: #888;
-    cursor: pointer;
-  }
-  
-  .commentInput {
-    width: 100%;
+  .profileRecentPosts {
     padding: 12px;
-    border: 1px solid #ebebeb;
-    border-radius: 4px;
-    resize: vertical;
+  }
+  .infoBlock {
+    min-width: 120px;
+    padding: 8px 8px;
+    font-size: 16px;
+  }
+  .statBlock {
+    min-width: 80px;
+    padding: 6px 8px;
     font-size: 14px;
-    margin-bottom: 12px;
-  }
-  
-  .loading,
-  .emptyState {
-    text-align: center;
-    padding: 2rem;
-    font-size: 1.2rem;
-  }
-  
-  .divider {
-    margin: 0 8px;
   }
 }

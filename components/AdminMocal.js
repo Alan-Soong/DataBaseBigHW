@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
-import styles from '../components_styles/AdminModal.module.css'; // 新建专用样式文件
+import styles from '../components_styles/AdminModal.module.css';
 
 export default function AdminModal({ isOpen, onClose }) {
   const router = useRouter();
@@ -24,13 +24,22 @@ export default function AdminModal({ isOpen, onClose }) {
         body: JSON.stringify({ username, password })
       });
 
+      const data = await res.json();
+      
       if (!res.ok) {
-        const data = await res.json();
+        throw new Error(data.message || '认证失败');
+      }
+
+      if (!data.success) {
         throw new Error(data.message || '认证失败');
       }
 
       onClose();
-      router.push('/posts/admin_mode');
+      // 使用查询参数传递用户名，确保管理员页面可以获取用户信息
+      router.push({
+        pathname: '/posts/admin_mode',
+        query: { username }
+      });
     } catch (err) {
       setError(err.message);
     } finally {

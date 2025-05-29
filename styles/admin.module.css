@@ -1,0 +1,121 @@
+.adminMenu {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.menuButton {
+  background-color: #0070f3;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  margin: 0 5px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+.menuButton:hover {
+  background-color: #005bb5;
+}
+
+.adminSection {
+  background-color: #f9f9f9;
+  border-radius: 12px;
+  padding: 32px 32px 24px 32px;
+  margin: 32px auto 20px auto;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  max-width: 1100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.sectionTitle {
+  font-size: 1.7rem;
+  color: #222;
+  margin-bottom: 24px;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.tableContainer {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.adminTable {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  overflow: hidden;
+}
+
+.adminTable th, .adminTable td {
+  padding: 14px 12px;
+  text-align: center;
+}
+
+.adminTable th {
+  background-color: #0070f3;
+  color: #fff;
+  font-size: 1.05rem;
+  font-weight: bold;
+  border-bottom: 2px solid #005bb5;
+}
+
+.adminTable td {
+  color: #333;
+  font-size: 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+.adminTable tr:last-child td {
+  border-bottom: none;
+}
+
+.adminTable tr:hover {
+  background-color: #f5f7fa;
+}
+
+.emptyRow {
+  text-align: center;
+  color: #888;
+  padding: 24px;
+}
+
+.actionCell {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.actionButton {
+  background-color: #0070f3;
+  color: white;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1rem;
+  transition: background-color 0.3s, box-shadow 0.2s;
+  box-shadow: 0 2px 6px rgba(0,112,243,0.08);
+}
+
+.actionButton:hover {
+  background-color: #005bb5;
+  box-shadow: 0 4px 12px rgba(0,112,243,0.12);
+}
+
+.deleteButton {
+  background-color: #dc3545;
+}
+
+.deleteButton:hover {
+  background-color: #c82333;
+} 
