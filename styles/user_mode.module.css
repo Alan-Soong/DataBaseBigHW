@@ -1,28 +1,47 @@
+/* 定义CSS变量 */
+.variableContainer {
+  --primary-color: #3498db; /* 主题蓝 */
+  --primary-hover: #2980b9;
+  --danger-color: #e74c3c; /* 危险红 */
+  --danger-hover: #c0392b;
+  --text-color: #333; /* 主要文字颜色 */
+  --text-light: #555; /* 较浅文字颜色 */
+  --text-lighter: #777; /* 更浅文字颜色 */
+  --bg-light: #f8f9fa; /* 浅背景 */
+  --border-color: #ddd; /* 边框颜色 */
+  --border-radius: 8px; /* 圆角大小 */
+  --box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  --transition: all 0.3s ease;
+  --spacing-small: 0.5rem;
+  --spacing-medium: 1rem;
+  --spacing-large: 1.5rem;
+}
+
 .error {
-  color: #e74c3c;
-  margin-bottom: 15px;
-  padding: 8px 12px;
-  background-color: rgba(231, 76, 60, 0.1);
+  color: var(--danger-color);
+  margin-bottom: var(--spacing-medium);
+  padding: var(--spacing-small) var(--spacing-medium);
+  background-color: rgba(var(--danger-color), 0.1); /* 使用变量并调整透明度 */
   border-radius: var(--border-radius);
-  border-left: 3px solid #e74c3c;
+  border-left: 3px solid var(--danger-color);
 }
 
 /* 美化帖子卡片 */
 .postCard {
   background-color: white;
   border-radius: var(--border-radius);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  padding: 20px;
+  box-shadow: var(--box-shadow);
+  padding: var(--spacing-large);
   transition: var(--transition);
   border: 1px solid var(--border-color);
-  margin-bottom: 20px;
+  margin-bottom: var(--spacing-large);
   position: relative;
   overflow: hidden;
 }
 
 .postCard:hover {
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15); /* 调整阴影效果 */
+  transform: translateY(-5px); /* 增加悬停上移效果 */
 }
 
 .postCard::before {
@@ -30,15 +49,15 @@
   position: absolute;
   top: 0;
   left: 0;
-  width: 4px;
+  width: 5px; /* 调整边线宽度 */
   height: 100%;
   background-color: var(--primary-color);
-  opacity: 0.7;
+  opacity: 0.8; /* 调整透明度 */
 }
 
 .postCardTitle {
-  font-size: 1.4rem;
-  margin: 0 0 10px 0;
+  font-size: 1.5rem; /* 调整标题大小 */
+  margin: 0 0 var(--spacing-small) 0; /* 调整底部外边距 */
   color: var(--text-color);
 }
 
@@ -50,16 +69,17 @@
 
 .postCardTitle a:hover {
   color: var(--primary-color);
+  text-decoration: underline; /* 添加下划线效果 */
 }
 
 /* 美化帖子元数据 */
 .postMeta {
   display: flex;
   flex-wrap: wrap;
-  gap: 15px;
+  gap: var(--spacing-medium);
   font-size: 0.9rem;
   color: var(--text-lighter);
-  margin-bottom: 15px;
+  margin-bottom: var(--spacing-medium);
 }
 
 .postMeta span {
@@ -70,19 +90,19 @@
 .postMeta span::before {
   content: '';
   display: inline-block;
-  width: 4px;
-  height: 4px;
+  width: 5px; /* 调整点大小 */
+  height: 5px; /* 调整点大小 */
   background-color: var(--text-lighter);
   border-radius: 50%;
-  margin-right: 8px;
+  margin-right: var(--spacing-small);
 }
 
 /* 美化帖子内容 */
 .postContent {
-  margin-bottom: 20px;
-  line-height: 1.6;
-  color: var(--text-color);
-  padding: 10px;
+  margin-bottom: var(--spacing-large);
+  line-height: 1.7; /* 调整行高 */
+  color: var(--text-light);
+  padding: var(--spacing-medium);
   background-color: var(--bg-light);
   border-radius: var(--border-radius);
   border: 1px solid var(--border-color);
@@ -91,45 +111,70 @@
 /* 美化帖子操作按钮 */
 .postActions {
   display: flex;
-  gap: 15px;
+  gap: var(--spacing-medium);
   border-top: 1px solid var(--border-color);
-  padding-top: 15px;
+  padding-top: var(--spacing-medium);
 }
 
-.likeButton, .commentButton {
-  display: flex;
+.likeButton, .commentButton, .deleteButton {
+  display: flex; /* 使用 flexbox 居中内容 */
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-small);
   background: none;
   border: none;
   color: var(--text-light);
-  font-size: 0.95rem;
-  padding: 8px 12px;
+  font-size: 1rem; /* 调整字体大小 */
+  padding: var(--spacing-small) var(--spacing-medium);
   border-radius: var(--border-radius);
   cursor: pointer;
   transition: var(--transition);
 }
 
-.likeButton:hover, .commentButton:hover {
+.likeButton:hover, .commentButton:hover, .deleteButton:hover {
   background-color: var(--bg-light);
-  color: var(--primary-color);
+  color: var(--primary-color); /* 悬停变主题色 */
 }
 
 .likeButton.active {
   color: var(--primary-color);
-  font-weight: 500;
+  font-weight: 600; /* 增加字体粗细 */
 }
 
 .likeButton::before {
   content: '👍';
-  font-size: 1.1rem;
-  margin-right: 5px;
+  font-size: 1.2rem; /* 调整图标大小 */
+  margin-right: 0;
 }
 
 .commentButton::before {
   content: '💬';
-  font-size: 1.1rem;
-  margin-right: 5px;
+  font-size: 1.2rem; /* 调整图标大小 */
+  margin-right: 0;
+}
+
+.deleteButton {
+  background-color: var(--danger-color);
+  color: white; /* 删除按钮文字为白色 */
+  border: none;
+  padding: var(--spacing-small) var(--spacing-medium);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-size: 1rem;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-small);
+}
+
+.deleteButton:hover {
+  background-color: var(--danger-hover);
+  transform: translateY(-2px); /* 添加悬停效果 */
+  box-shadow: 0 2px 8px rgba(var(--danger-color), 0.3); /* 添加阴影 */
+}
+
+.deleteButton::before {
+  content: '🗑️';
+  font-size: 1.2rem; /* 调整图标大小 */
 }
 
 /* 美化发帖表单 */
@@ -137,67 +182,67 @@
   background-color: white;
   border-radius: var(--border-radius);
   box-shadow: var(--box-shadow);
-  padding: 25px;
-  margin-bottom: 30px;
+  padding: var(--spacing-large);
+  margin-bottom: var(--spacing-large);
   animation: fadeIn 0.3s ease-out;
   border: 1px solid var(--border-color);
 }
 
 .newPostForm h2 {
   margin-top: 0;
-  margin-bottom: 20px;
-  font-size: 1.4rem;
+  margin-bottom: var(--spacing-medium);
+  font-size: 1.6rem; /* 调整标题大小 */
   color: var(--text-color);
-  border-bottom: 2px solid var(--primary-color);
-  padding-bottom: 10px;
+  border-bottom: 2px solid var(--primary-color); /* 使用变量 */
+  padding-bottom: var(--spacing-small);
 }
 
 .formGroup {
-  margin-bottom: 20px;
+  margin-bottom: var(--spacing-large);
 }
 
 .formGroup label {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: var(--spacing-small);
   font-weight: 500;
   color: var(--text-color);
 }
 
-.formGroup input, 
+.formGroup input,
 .formGroup textarea,
 .formGroup select {
   width: 100%;
-  padding: 12px 15px;
+  padding: var(--spacing-small) var(--spacing-medium);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
   font-size: 1rem;
   transition: var(--transition);
 }
 
-.formGroup input:focus, 
+.formGroup input:focus,
 .formGroup textarea:focus,
 .formGroup select:focus {
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+  box-shadow: 0 0 0 3px rgba(var(--primary-color), 0.2); /* 调整阴影效果 */
   outline: none;
 }
 
 .formGroup textarea {
-  min-height: 120px;
+  min-height: 150px; /* 增加最小高度 */
   resize: vertical;
 }
 
 .formActions {
   display: flex;
-  justify-content: flex-end;
-  gap: 15px;
-  margin-top: 25px;
+  justify-content: flex-end; /* 按钮靠右对齐 */
+  gap: var(--spacing-medium);
+  margin-top: var(--spacing-medium);
 }
 
 .submitButton {
-  padding: 10px 25px;
+  padding: var(--spacing-small) var(--spacing-large);
   background-color: var(--primary-color);
-  color: blue;
+  color: white; /* 提交按钮文字为白色 */
   border: none;
   border-radius: var(--border-radius);
   font-size: 1rem;
@@ -212,7 +257,7 @@
 }
 
 .cancelButton {
-  padding: 10px 25px;
+  padding: var(--spacing-small) var(--spacing-large);
   background-color: transparent;
   color: var(--text-light);
   border: 1px solid var(--border-color);
@@ -223,46 +268,46 @@
 }
 
 .cancelButton:hover {
-  background-color: var(--bg-dark);
+  background-color: var(--bg-light);
   color: var(--text-color);
 }
 
 /* 美化侧边栏 */
 .postSidebar {
   width: 280px;
-  padding: 25px;
+  padding: var(--spacing-large);
   background-color: white;
   border-radius: var(--border-radius);
   box-shadow: var(--box-shadow);
-  margin-right: 25px;
+  margin-right: var(--spacing-large);
   position: sticky;
-  top: 20px;
+  top: var(--spacing-medium);
   height: fit-content;
   border: 1px solid var(--border-color);
 }
 
 .sidebarTitle {
-  font-size: 1.3rem;
+  font-size: 1.4rem; /* 调整标题大小 */
   margin-top: 0;
-  margin-bottom: 20px;
-  padding-bottom: 12px;
-  border-bottom: 2px solid var(--primary-color);
+  margin-bottom: var(--spacing-medium);
+  padding-bottom: var(--spacing-small);
+  border-bottom: 2px solid var(--primary-color); /* 使用变量 */
   color: var(--text-color);
 }
 
 .sidebarMenu {
   list-style: none;
   padding: 0;
-  margin: 0 0 25px 0;
+  margin: 0 0 var(--spacing-large) 0;
 }
 
 .sidebarMenu li {
-  margin-bottom: 12px;
+  margin-bottom: var(--spacing-small); /* 调整列表项间距 */
 }
 
 .sidebarMenu a {
   display: block;
-  padding: 10px 15px;
+  padding: var(--spacing-small) var(--spacing-medium);
   border-radius: var(--border-radius);
   transition: var(--transition);
   color: var(--text-color);
@@ -278,15 +323,15 @@
 }
 
 .sidebarSection {
-  margin-top: 30px;
+  margin-top: var(--spacing-large);
 }
 
 .sidebarSection h4 {
-  font-size: 1.1rem;
+  font-size: 1.2rem; /* 调整标题大小 */
   margin-top: 0;
-  margin-bottom: 15px;
+  margin-bottom: var(--spacing-medium);
   color: var(--text-color);
-  padding-bottom: 8px;
+  padding-bottom: var(--spacing-small);
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -295,37 +340,38 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 15px;
+  padding: var(--spacing-medium);
   background-color: var(--bg-light);
   border-radius: var(--border-radius);
 }
 
 .avatar {
-  width: 70px;
-  height: 70px;
+  width: 80px; /* 调整头像大小 */
+  height: 80px; /* 调整头像大小 */
   border-radius: 50%;
   background-color: var(--primary-color);
   color: white;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 1.8rem;
+  font-size: 2rem; /* 调整字体大小 */
   font-weight: bold;
-  margin-bottom: 15px;
+  margin-bottom: var(--spacing-medium);
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
   border: 3px solid white;
 }
 
 .userInfo span {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 500;
-  margin-bottom: 8px;
+  margin-bottom: var(--spacing-small);
+  color: var(--text-color); /* 调整文字颜色 */
 }
 
 .userLevel, .userExp {
   font-size: 0.9rem;
   color: var(--text-lighter);
-  margin-top: 5px;
+  margin-top: 0.3rem;
   background-color: white;
   padding: 4px 10px;
   border-radius: 20px;
@@ -337,7 +383,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 30px;
+  padding: var(--spacing-large);
   color: var(--text-lighter);
   font-size: 1rem;
 }
@@ -347,7 +393,7 @@
   display: block;
   width: 30px;
   height: 30px;
-  margin-left: 15px;
+  margin-left: var(--spacing-medium);
   border-radius: 50%;
   border: 4px solid var(--primary-color);
   border-color: var(--primary-color) transparent var(--primary-color) transparent;
@@ -357,20 +403,21 @@
 /* 美化空状态 */
 .emptyState {
   text-align: center;
-  padding: 40px 20px;
+  padding: var(--spacing-large) var(--spacing-large);
   color: var(--text-lighter);
   background-color: var(--bg-light);
   border-radius: var(--border-radius);
   border: 1px dashed var(--border-color);
+  margin-bottom: var(--spacing-large); /* 添加底部外边距 */
 }
 
 .emptyState p {
-  margin-bottom: 20px;
+  margin-bottom: var(--spacing-medium);
   font-size: 1.1rem;
 }
 
 .createButton {
-  padding: 10px 20px;
+  padding: var(--spacing-small) var(--spacing-large);
   background-color: var(--primary-color);
   color: white;
   border: none;
@@ -388,59 +435,460 @@
 /* 美化提示信息 */
 .toast {
   position: fixed;
-  top: 20px;
-  right: 20px;
-  padding: 15px 25px;
+  top: var(--spacing-medium);
+  right: var(--spacing-medium);
+  padding: var(--spacing-small) var(--spacing-medium);
   background-color: var(--primary-color);
   color: white;
   border-radius: var(--border-radius);
-  box-shadow: 0 3px 15px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--box-shadow);
   z-index: 1000;
   animation: slideIn 0.3s ease-out, fadeOut 0.5s ease-out 2.5s forwards;
   font-weight: 500;
 }
 
+/* 全局或基础样式（如果需要） */
+/* 移除以下内容，基础样式应在全局CSS中定义 */
+/*
+:global(body) {
+  background-color: #f0f2f5;
+  color: var(--text-color);
+  line-height: 1.6;
+}
+*/
+
+/* 整体布局容器 */
+.container {
+  display: flex; /* 使用Flexbox布局 */
+  gap: var(--spacing-large); /* 侧边栏与主内容区域之间的间距 */
+  padding: var(--spacing-large) 0; /* 容器顶部和底部内边距 */
+  max-width: 1200px; /* 最大宽度 */
+  margin: 0 auto; /* 居中 */
+  align-items: flex-start; /* 顶部对齐 */
+}
+
+/* 侧边栏 */
+.postSidebar {
+  width: 280px; /* 固定宽度 */
+  flex-shrink: 0; /* 不缩小 */
+  padding: var(--spacing-large);
+  background-color: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  /* margin-right: var(--spacing-large); */ /* 间距由 .container 的 gap 控制 */
+  position: sticky;
+  top: var(--spacing-large); /* 吸顶效果，调整top值 */
+  height: fit-content; /* 高度自适应 */
+  border: 1px solid var(--border-color);
+}
+
+/* 主内容区域 */
+.mainContent {
+  flex-grow: 1; /* 填充剩余空间 */
+  /* min-width: 0; */ /* 防止内容溢出 */
+}
+
+/* 帖子列表容器 */
+.postList {
+  /* 帖子列表本身不需要flexbox，让帖子卡片自然堆叠 */
+}
+
+/* 个人主页主要内容布局 */
+.profileContent {
+  display: flex; /* 使用Flexbox布局 */
+  gap: var(--spacing-large); /* 用户信息区与最近发帖区之间的间距 */
+  align-items: flex-start; /* 顶部对齐 */
+  width: 100%; /* 确保填充主内容区域 */
+}
+
+/* 个人主页左侧区域（用户信息、统计、操作） */
+.profileSection {
+  flex-basis: 350px; /* 给用户信息/统计/操作区一个基础宽度 */
+  flex-shrink: 0; /* 不缩小 */
+  display: flex;
+  flex-direction: column; /* 内部元素垂直堆叠 */
+  gap: var(--spacing-large); /* 各个子块之间的间距 */
+}
+
+/* 用户基础信息区 */
+.profileBase {
+  background-color: #ffffff; /* 白色背景 */
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  padding: var(--spacing-large);
+  display: flex;
+  flex-direction: column; /* 改为垂直布局，头像和信息上下排列 */
+  align-items: center; /* 主轴（垂直）居中 */
+  gap: var(--spacing-large); /* 增加头像和信息之间的间距 */
+  /* margin-bottom: var(--spacing-large); */ /* 间距由父容器的 gap 控制 */
+  border: 1px solid var(--border-color);
+  width: 100%; /* 填充父容器宽度 */
+  box-sizing: border-box; /* 包含padding和border在宽度内 */
+}
+
+/* 用户头像 */
+.profileAvatar {
+  width: 100px; /* 调整头像大小 */
+  height: 100px; /* 调整头像大小 */
+  border-radius: 50%;
+  background-color: var(--primary-color);
+  color: white;
+  display: flex;
+  justify-content: center; /* 水平居中 */
+  align-items: center; /* 垂直居中 */
+  font-size: 3rem; /* 调整字体大小 */
+  font-weight: bold;
+  /* margin-bottom: var(--spacing-medium); */ /* 间距由父容器的 gap 控制 */
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+  border: 3px solid white;
+  flex-shrink: 0; /* 防止头像被压缩 */
+}
+
+/* 用户信息块 */
+.profileInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* 垂直布局时，子元素水平居中 */
+  text-align: center; /* 文本居中 */
+}
+
+/* 用户名 */
+.userName {
+  font-size: 2rem; /* 调整用户名大小 */
+  margin: 0 0 var(--spacing-small) 0;
+  color: var(--text-color);
+}
+
+/* 信息行 */
+.infoBlock {
+  font-size: 1.1rem;
+  margin-bottom: var(--spacing-small); /* 调整信息行间距 */
+  color: var(--text-light);
+}
+
+/* 统计信息区 */
+.profileStats {
+  background-color: #ffffff; /* 白色背景 */
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  padding: var(--spacing-large);
+  display: flex;
+  flex-wrap: wrap; /* 允许换行 */
+  justify-content: center; /* 统计项水平居中 */
+  gap: var(--spacing-medium); /* 调整统计项之间的间距 */
+  /* margin-bottom: var(--spacing-large); */ /* 间距由父容器的 gap 控制 */
+  border: 1px solid var(--border-color);
+}
+
+/* 单个统计项 */
+.statBlock {
+  background-color: var(--bg-light);
+  padding: var(--spacing-small) var(--spacing-medium);
+  border-radius: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  font-size: 1rem;
+  color: var(--text-color);
+  text-align: center; /* 文本居中 */
+}
+
+/* 操作区 */
+.profileActions {
+  display: flex;
+  flex-direction: column; /* 改为垂直堆叠 */
+  gap: var(--spacing-medium);
+  /* margin-bottom: var(--spacing-large); */ /* 间距由父容器的 gap 控制 */
+  width: 100%; /* 填充父容器宽度 */
+  box-sizing: border-box;
+}
+
+.profileActions button {
+  padding: var(--spacing-small) var(--spacing-large);
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: var(--transition);
+  /* flex-grow: 1; */ /* 垂直布局时不需要填充空间 */
+  width: 100%; /* 按钮填充父容器宽度 */
+}
+
+/* 新增关注和拉黑按钮样式 */
+.profileActions .followButton {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.profileActions .followButton:hover {
+  background-color: var(--primary-hover);
+}
+
+.profileActions .followButton.following {
+  background-color: var(--bg-light);
+  color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+}
+
+.profileActions .blockButton {
+  background-color: var(--danger-color);
+  color: white;
+}
+
+.profileActions .blockButton:hover {
+  background-color: var(--danger-hover);
+}
+
+.profileActions .blockButton.blocked {
+  background-color: var(--bg-light);
+  color: var(--danger-color);
+  border: 1px solid var(--danger-color);
+}
+
+.profileActions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 最近发帖区 */
+.profileRecentPosts {
+  background-color: #ffffff; /* 白色背景 */
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  padding: var(--spacing-large);
+  /* margin-bottom: var(--spacing-large); */ /* 间距由父容器的 gap 控制 */
+  border: 1px solid var(--border-color);
+  flex-grow: 1; /* 填充剩余空间 */
+}
+
+/* 最近发帖区标题 */
+.profileRecentPostsTitle {
+  font-size: 1.8rem; /* 调整标题大小 */
+  margin-top: 0;
+  margin-bottom: var(--spacing-medium);
+  color: var(--text-color);
+  padding-bottom: var(--spacing-small);
+  border-bottom: 2px solid var(--primary-color); /* 添加底线 */
+}
+
+/* 帖子列表项（沿用utilStyles中的.listItem和.listMeta，或在userModeStyles中定义） */
+/* 如果需要更精细控制，可以在这里定义 .postList 下的 li, a, div 等样式 */
+
 /* 响应式设计增强 */
+@media (max-width: 1024px) {
+  .container {
+    gap: var(--spacing-medium);
+    padding: var(--spacing-medium);
+  }
+}
+
 @media (max-width: 768px) {
-  .postContainer {
-    flex-direction: column;
+  .container {
+    flex-direction: column; /* 在小屏幕上改为垂直堆叠 */
+    gap: var(--spacing-large); /* 调整堆叠时的间距 */
+    padding: var(--spacing-medium);
   }
-  
+
   .postSidebar {
-    width: 100%;
+    width: 100%; /* 小屏幕上侧边栏全宽 */
     margin-right: 0;
-    margin-bottom: 20px;
-    position: static;
+    margin-bottom: 0; /* 间距由 .container 的 gap 控制 */
+    position: static; /* 移除吸顶 */
+    top: auto;
+    padding: var(--spacing-medium);
   }
-  
+
+  .mainContent {
+    width: 100%; /* 小屏幕上主内容区域全宽 */
+  }
+
   .userInfo {
     flex-direction: row;
     align-items: center;
-    gap: 15px;
-    padding: 10px;
+    gap: var(--spacing-medium);
+    padding: var(--spacing-small);
   }
-  
+
   .avatar {
     margin-bottom: 0;
-    width: 50px;
-    height: 50px;
-    font-size: 1.3rem;
+    width: 60px; /* 调整头像大小 */
+    height: 60px; /* 调整头像大小 */
+    font-size: 1.5rem; /* 调整字体大小 */
   }
-  
+
   .postMeta {
     flex-direction: column;
     gap: 5px;
   }
-  
+
   .postActions {
     justify-content: space-between;
+    gap: var(--spacing-small); /* 减小间距 */
   }
-  
+
+  .likeButton, .commentButton, .deleteButton {
+     padding: var(--spacing-small); /* 调整内边距 */
+     font-size: 0.9rem; /* 调整字体大小 */
+     gap: var(--spacing-small); /* 调整图标与文字间距 */
+  }
+
   .formActions {
     flex-direction: column;
+    gap: var(--spacing-small); /* 调整间距 */
   }
-  
+
   .submitButton, .cancelButton {
     width: 100%;
+    padding: var(--spacing-small) var(--spacing-medium);
   }
+  
+  .profileContent {
+    flex-direction: column; /* 在小屏幕上改为垂直堆叠 */
+    gap: var(--spacing-large); /* 调整堆叠时的间距 */
+  }
+
+  /* 个人主页左侧区域（用户信息、统计、操作）在小屏幕下全宽 */
+  .profileSection {
+    flex-basis: auto;
+    width: 100%;
+    align-items: center; /* 小屏幕下，profileSection内的子元素水平居中 */
+  }
+
+  .profileRecentPosts h2 {
+    font-size: 1.5rem;
+    margin-bottom: var(--spacing-medium);
+    padding-bottom: var(--spacing-small);
+  }
+
+  /* 操作区在小屏幕下横向排列 */
+  .profileActions {
+     flex-direction: row;
+     justify-content: center; /* 水平居中 */
+  }
+
+  .profileActions button {
+    width: auto; /* 小屏幕下按钮宽度自适应内容 */
+    flex-grow: 1; /* 按钮填充可用空间 */
+  }
+}
+
+/* 退出确认弹窗样式 */
+.dialogOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6); /* 调整背景透明度 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.dialogContent {
+  background-color: white;
+  padding: var(--spacing-large);
+  border-radius: var(--border-radius);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4); /* 调整阴影 */
+  text-align: center;
+  max-width: 450px; /* 调整最大宽度 */
+  width: 90%;
+}
+
+.dialogTitle {
+  font-size: 1.6rem; /* 调整标题大小 */
+  margin-bottom: var(--spacing-medium);
+  color: var(--text-color);
+}
+
+.dialogMessage {
+  font-size: 1.1rem; /* 调整消息大小 */
+  margin-bottom: var(--spacing-large);
+  color: var(--text-light);
+}
+
+.dialogActions {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-medium); /* 调整按钮间距 */
+}
+
+.dialogActions button {
+  padding: var(--spacing-small) var(--spacing-large);
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-size: 1rem;
+  transition: var(--transition);
+  font-weight: 500;
+}
+
+.dialogActions button:first-child {
+  background-color: var(--border-color); /* 使用边框颜色作为取消背景 */
+  color: var(--text-color);
+}
+
+.dialogActions button:first-child:hover {
+  background-color: #ccc; /* 悬停颜色 */
+}
+
+.dialogActions button:last-child {
+  background-color: var(--danger-color);
+  color: white;
+}
+
+.dialogActions button:last-child:hover {
+  background-color: var(--danger-hover);
+}
+
+.dialogActions button:hover {
+  opacity: 1; /* 移除 hover 的 opacity 效果，使用 background-color 变化 */
+}
+
+/* 返回顶部按钮样式 */
+.backToTop {
+  position: fixed;
+  bottom: var(--spacing-large);
+  right: var(--spacing-large);
+  width: 45px; /* 调整大小 */
+  height: 45px; /* 调整大小 */
+  background-color: rgba(var(--primary-color), 0.7); /* 使用变量并调整透明度 */
+  color: white;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.5rem; /* 调整字体大小 */
+  cursor: pointer;
+  box-shadow: var(--box-shadow);
+  transition: var(--transition);
+  z-index: 900; /* 略低于模态框 */
+  opacity: 0;
+  visibility: hidden;
+}
+
+.backToTop.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.backToTop:hover {
+  background-color: var(--primary-color);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(var(--primary-color), 0.3); /* 调整阴影 */
+}
+
+@keyframes loading {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes fadeOut {
+  to { opacity: 0; visibility: hidden; }
 }

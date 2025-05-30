@@ -10,6 +10,7 @@ export default function RegisterModal({ isOpen, onClose }) {
     student_id: '',
     major: ''
   });
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -19,6 +20,11 @@ export default function RegisterModal({ isOpen, onClose }) {
     
     if (!username || !password || !student_id || !major) {
       setError('所有字段均为必填项');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError('两次输入的密码不一致');
       return;
     }
 
@@ -37,6 +43,9 @@ export default function RegisterModal({ isOpen, onClose }) {
       router.push('/posts/user_mode');
     } catch (err) {
       console.error('注册错误:', err);
+      if (err.message && err.message.includes('用户名已存在')) {
+        alert(err.message);
+      }
       setError(err.message || '注册失败，请稍后重试');
     } finally {
       setIsLoading(false);
@@ -45,7 +54,13 @@ export default function RegisterModal({ isOpen, onClose }) {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    if (name === 'password') {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    } else if (name === 'confirmPassword') {
+      setConfirmPassword(value);
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
     setError('');
   };
 
@@ -64,6 +79,7 @@ export default function RegisterModal({ isOpen, onClose }) {
               placeholder="请输入用户名"
               value={formData.username}
               onChange={handleInputChange}
+              autoComplete="username"
             />
           </div>
 
@@ -75,6 +91,19 @@ export default function RegisterModal({ isOpen, onClose }) {
               placeholder="至少6位密码"
               value={formData.password}
               onChange={handleInputChange}
+              autoComplete="new-password"
+            />
+          </div>
+
+          <div className={styles.inputGroup}>
+            <label>确认密码</label>
+            <input
+              type="password"
+              name="confirmPassword"
+              placeholder="请再次输入密码"
+              value={confirmPassword}
+              onChange={handleInputChange}
+              autoComplete="new-password"
             />
           </div>
 

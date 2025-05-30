@@ -5,6 +5,8 @@ import utilStyles from '../../styles/utils.module.css';
 import userModeStyles from '../../styles/user_mode.module.css';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
+import ExitConfirmModal from '../../components/ExitConfirmModal';
+import AboutUsContent from '../../components/AboutUsContent';
 
 export default function UserMode() {
   const router = useRouter();
@@ -21,55 +23,48 @@ export default function UserMode() {
   const [sectionsLoading, setSectionsLoading] = useState(true);
   const [postsLoading, setPostsLoading] = useState(true);
   const [activeSection, setActiveSection] = useState(null);
+  const [activeContent, setActiveContent] = useState('posts');
 
   // 获取当前登录用户信息
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
-        const { username } = router.query;
-        if (!username) return;
-
-        const res = await fetch(`/api/auth/session?username=${encodeURIComponent(username)}`);
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        
+        // 优先调用 checkLogin 获取当前登录用户
+        const res = await fetch('/api/checkLogin');
         const data = await res.json();
-        if (data.user) {
-          setCurrentUser(data.user);
-          // 将用户信息存储在sessionStorage中，以便在页面间导航时保持登录状态
-          sessionStorage.setItem('currentUser', JSON.stringify(data.user));
-          sessionStorage.setItem('username', username);
+
+        if (data.isLoggedIn && data.userId) {
+          // 获取到当前用户ID后，再调用 userProfile 获取详细资料
+          const profileRes = await fetch(`/api/userProfile?userId=${data.userId}`);
+          const profileData = await profileRes.json();
+
+          if (profileData.success) {
+            setCurrentUser(profileData.user);
+            // 可以选择更新 sessionStorage，但主要依赖后端 checkLogin
+            sessionStorage.setItem('currentUser', JSON.stringify(profileData.user));
+          } else {
+             console.error('获取当前用户资料失败:', profileData.message);
+             // 资料获取失败，也视为未登录或需要重新登录
+             router.push('/'); // 或者跳转到登录页
+          }
+
         } else {
-          router.push('/');
+          // 未登录或获取登录状态失败，跳转到首页或登录页
+          router.push('/'); // 或者跳转到登录页
         }
       } catch (error) {
-        console.error('获取当前用户信息失败:', error);
-        router.push('/');
+        console.error('获取当前用户信息或资料失败:', error);
+        // 发生错误，跳转到首页或登录页
+        router.push('/'); // 或者跳转到登录页
       } finally {
         setLoading(false);
       }
     };
 
-    // 尝试从sessionStorage恢复用户信息
-    const storedUser = sessionStorage.getItem('currentUser');
-    const storedUsername = sessionStorage.getItem('username');
-    
-    if (storedUser && storedUsername) {
-      setCurrentUser(JSON.parse(storedUser));
-      setLoading(false);
-      
-      // 如果URL中没有username参数，但sessionStorage中有，则更新URL
-      if (router.isReady && !router.query.username) {
-        router.replace({
-          pathname: router.pathname,
-          query: { ...router.query, username: storedUsername }
-        }, undefined, { shallow: true });
-      }
-    } else if (router.isReady && router.query.username) {
-      fetchCurrentUser();
-    } else if (router.isReady) {
-      router.push('/');
-    }
-  }, [router.isReady, router.query]);
+    // 页面加载时就尝试获取当前用户
+    fetchCurrentUser();
+
+  }, [router]); // 依赖 router，确保 router 可用
 
   // 获取频道列表
   useEffect(() => {
@@ -289,19 +284,50 @@ export default function UserMode() {
     });
   };
 
+  // 处理删除帖子
+  const handleDeletePost = async (postId) => {
+    if (!confirm('确定要删除该帖子吗？此操作不可撤销，将同时删除该帖子的所有评论。')) {
+      return;
+    }
+    
+    try {
+      const res = await fetch('/api/user/deletePost', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          postId,
+          userId: currentUser.user_id
+        })
+      });
+      
+      const data = await res.json();
+      if (data.success) {
+        // 从列表中移除被删除的帖子
+        setPosts(posts.filter(post => post.post_id !== postId));
+        showToast('帖子删除成功');
+      } else {
+        showToast(data.message || '删除失败');
+      }
+    } catch (error) {
+      console.error('删除帖子失败:', error);
+      showToast('删除失败，请稍后重试');
+    }
+  };
+
   return (
     <Layout>
       <Head>
         <title>校园论坛 - 用户模式</title>
       </Head>
       
-      <div className={utilStyles.postContainer}>
+      <div className={`${userModeStyles.container} ${userModeStyles.variableContainer}`}>
         <div className={userModeStyles.postSidebar}>
           <h3 className={userModeStyles.sidebarTitle}>导航菜单</h3>
           <ul className={userModeStyles.sidebarMenu}>
             <li>
               <a 
                 href="#" 
+                className={userModeStyles.navItem}
                 onClick={(e) => {
                   e.preventDefault();
                   handleExit();
@@ -313,25 +339,34 @@ export default function UserMode() {
             <li>
               <a 
                 href="#" 
+                className={`${userModeStyles.navItem} ${showNewPostForm && activeContent === 'posts' ? userModeStyles.active : ''}`}
                 onClick={(e) => {
                   e.preventDefault();
                   setShowNewPostForm(true);
+                  setActiveContent('posts');
                   scrollToTop();
                 }}
               >
                 发布新帖子
               </a>
             </li>
-            {currentUser && (
-              <li>
-                <Link href={{
-                  pathname: '/user/[id]',
-                  query: { id: currentUser.user_id, username: router.query.username }
-                }}>
-                  个人主页
-                </Link>
-              </li>
-            )}
+            <li className={userModeStyles.navItem}>
+              <Link href={`/user/me`}>
+                我的主页
+              </Link>
+            </li>
+            <li>
+              <a 
+                href="#" 
+                className={`${userModeStyles.navItem} ${activeContent === 'about' ? userModeStyles.active : ''}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setActiveContent('about');
+                }}
+              >
+                关于我们
+              </a>
+            </li>
           </ul>
           
           <div className={userModeStyles.sidebarSection}>
@@ -343,7 +378,7 @@ export default function UserMode() {
                 <li>
                   <a 
                     href="#" 
-                    className={activeSection === null ? userModeStyles.active : ''}
+                    className={`${userModeStyles.navItem} ${activeSection === null ? userModeStyles.active : ''}`}
                     onClick={(e) => {
                       e.preventDefault();
                       handleSectionFilter(null);
@@ -356,7 +391,7 @@ export default function UserMode() {
                   <li key={section.section_id}>
                     <a 
                       href="#" 
-                      className={activeSection === section.section_id ? userModeStyles.active : ''}
+                      className={`${userModeStyles.navItem} ${activeSection === section.section_id ? userModeStyles.active : ''}`}
                       onClick={(e) => {
                         e.preventDefault();
                         handleSectionFilter(section.section_id);
@@ -379,7 +414,7 @@ export default function UserMode() {
                 <div className={userModeStyles.avatar}>
                   {currentUser.username?.charAt(0) || '?'}
                 </div>
-                <span>{currentUser.username}</span>
+                <span className={userModeStyles.userName}>{currentUser.username}</span>
                 <div className={userModeStyles.userLevel}>
                   等级: {currentUser.level || 1}
                 </div>
@@ -391,145 +426,167 @@ export default function UserMode() {
           )}
         </div>
         
-        <main className={utilStyles.postMain}>
-          <h1 className={utilStyles.postTitle}>
-            校园论坛
-            {activeSection !== null && sections.find(s => s.section_id === activeSection) && 
-              ` - ${sections.find(s => s.section_id === activeSection).section_name}`
-            }
-          </h1>
-          
-          {loading ? (
-            <div className={userModeStyles.loading}></div>
-          ) : (
+        <main className={userModeStyles.mainContent}>
+          {activeContent === 'posts' ? (
             <>
-              {showNewPostForm && (
-                <div className={userModeStyles.newPostForm}>
-                  <h2>发布新帖子</h2>
-                  <form onSubmit={handleSubmitPost}>
-                    <div className={userModeStyles.formGroup}>
-                      <label htmlFor="section_id">选择频道</label>
-                      <select 
-                        id="section_id" 
-                        name="section_id" 
-                        value={newPost.section_id}
-                        onChange={handleInputChange}
-                        required
-                      >
-                        <option value="">-- 请选择频道 --</option>
-                        {sections && sections.map(section => (
-                          <option key={section.section_id} value={section.section_id}>
-                            {section.section_name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    
-                    <div className={userModeStyles.formGroup}>
-                      <label htmlFor="title">标题</label>
-                      <input 
-                        type="text" 
-                        id="title" 
-                        name="title" 
-                        value={newPost.title}
-                        onChange={handleInputChange}
-                        placeholder="请输入帖子标题"
-                        required
-                      />
-                    </div>
-                    
-                    <div className={userModeStyles.formGroup}>
-                      <label htmlFor="content">内容</label>
-                      <textarea 
-                        id="content" 
-                        name="content" 
-                        value={newPost.content}
-                        onChange={handleInputChange}
-                        placeholder="请输入帖子内容"
-                        rows="6"
-                        required
-                      ></textarea>
-                    </div>
-                    
-                    {formError && <div className={userModeStyles.error}>{formError}</div>}
-                    
-                    <div className={userModeStyles.formActions}>
-                      <button 
-                        type="button" 
-                        className={userModeStyles.cancelButton}
-                        onClick={() => {
-                          setShowNewPostForm(false);
-                          setFormError('');
-                        }}
-                      >
-                        取消
-                      </button>
-                      <button type="submit" className={userModeStyles.submitButton}>
-                        发布帖子
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              )}
+              <h1 className={userModeStyles.pageTitle}>
+                校园论坛
+                {activeSection !== null && sections.find(s => s.section_id === activeSection) && 
+                  ` - ${sections.find(s => s.section_id === activeSection).section_name}`
+                }
+              </h1>
               
-              <div className={userModeStyles.postList}>
-                {postsLoading ? (
-                  <div className={userModeStyles.loading}>加载帖子中...</div>
-                ) : posts && posts.length > 0 ? (
-                  posts.map(post => (
-                    <div key={post.post_id} className={userModeStyles.postCard}>
-                      <div className={userModeStyles.postHeader}>
-                        <h3 className={userModeStyles.postCardTitle}>
-                          <Link href={{
-                            pathname: '/posts/[id]',
-                            query: { id: post.post_id, username: router.query.username }
-                          }}>
-                            {post.title}
-                          </Link>
-                        </h3>
-                        <div className={userModeStyles.postMeta}>
-                          <span>作者: {post.username}</span>
-                          <span>频道: {post.section_name || '未分类'}</span>
-                          <span>发布于: {formatDate(post.post_time)}</span>
-                          <span>评论: {post.comment_count || 0}</span>
+              {loading ? (
+                <div className={userModeStyles.loading}></div>
+              ) : (
+                <>
+                  {showNewPostForm && (
+                    <div className={userModeStyles.newPostForm}>
+                      <h2>发布新帖子</h2>
+                      <form onSubmit={handleSubmitPost}>
+                        <div className={userModeStyles.formGroup}>
+                          <label htmlFor="section_id">选择频道</label>
+                          <select 
+                            id="section_id" 
+                            name="section_id" 
+                            value={newPost.section_id}
+                            onChange={handleInputChange}
+                            required
+                          >
+                            <option value="">-- 请选择频道 --</option>
+                            {sections && sections.map(section => (
+                              <option key={section.section_id} value={section.section_id}>
+                                {section.section_name}
+                              </option>
+                            ))}
+                          </select>
                         </div>
-                      </div>
-                      <div className={userModeStyles.postContent}>
-                        {post.content && post.content.length > 200 ? `${post.content.substring(0, 200)}...` : post.content}
-                      </div>
-                      <div className={userModeStyles.postActions}>
-                        <button 
-                          className={`${userModeStyles.likeButton} ${post.liked ? userModeStyles.active : ''}`}
-                          onClick={() => handleLike(post.post_id)}
-                        >
-                          {post.like_count || 0}
-                        </button>
-                        <Link href={{
-                          pathname: '/posts/[id]',
-                          query: { id: post.post_id, username: router.query.username }
-                        }} className={userModeStyles.commentButton}>
-                          查看评论 ({post.comment_count || 0})
-                        </Link>
-                      </div>
+                        
+                        <div className={userModeStyles.formGroup}>
+                          <label htmlFor="title">标题</label>
+                          <input 
+                            type="text" 
+                            id="title" 
+                            name="title" 
+                            value={newPost.title}
+                            onChange={handleInputChange}
+                            placeholder="请输入帖子标题"
+                            required
+                          />
+                        </div>
+                        
+                        <div className={userModeStyles.formGroup}>
+                          <label htmlFor="content">内容</label>
+                          <textarea 
+                            id="content" 
+                            name="content" 
+                            value={newPost.content}
+                            onChange={handleInputChange}
+                            placeholder="请输入帖子内容"
+                            rows="6"
+                            required
+                          ></textarea>
+                        </div>
+                        
+                        {formError && <div className={userModeStyles.error}>{formError}</div>}
+                        
+                        <div className={userModeStyles.formActions}>
+                          <button 
+                            type="button" 
+                            className={userModeStyles.cancelButton}
+                            onClick={() => {
+                              setShowNewPostForm(false);
+                              setFormError('');
+                            }}
+                          >
+                            取消
+                          </button>
+                          <button type="submit" className={userModeStyles.submitButton}>
+                            发布帖子
+                          </button>
+                        </div>
+                      </form>
                     </div>
-                  ))
-                ) : (
-                  <div className={userModeStyles.emptyState}>
-                    <p>暂无帖子</p>
-                    <button 
-                      className={userModeStyles.createButton}
-                      onClick={() => {
-                        setShowNewPostForm(true);
-                        scrollToTop();
-                      }}
-                    >
-                      发布第一个帖子
-                    </button>
+                  )}
+                  
+                  <div className={userModeStyles.postList}>
+                    {postsLoading ? (
+                      <div className={userModeStyles.loading}>加载帖子中...</div>
+                    ) : posts && posts.length > 0 ? (
+                      posts.map(post => (
+                        <div key={post.post_id} className={userModeStyles.postCard}>
+                          <div className={userModeStyles.postHeader}>
+                            <h3 className={userModeStyles.postCardTitle}>
+                              <Link href={{
+                                pathname: '/posts/[id]',
+                                query: { id: post.post_id, username: router.query.username }
+                              }}>
+                                {post.title}
+                              </Link>
+                            </h3>
+                            <div className={userModeStyles.postMeta}>
+                              <span>作者: 
+                                <Link href={{
+                                   pathname: '/user/[id]',
+                                   query: { id: post.user_id, username: post.username || '' }
+                                }}>
+                                  {post.username}
+                                </Link>
+                              </span>
+                              <span>频道: {post.section_name || '未分类'}</span>
+                              <span>发布于: {formatDate(post.post_time)}</span>
+                              <span>评论: {post.comment_count || 0}</span>
+                            </div>
+                          </div>
+                          <div className={userModeStyles.postContent}>
+                            {post.content && post.content.length > 200 ? `${post.content.substring(0, 200)}...` : post.content}
+                          </div>
+                          <div className={userModeStyles.postActions}>
+                            <button 
+                              className={`${userModeStyles.likeButton} ${post.liked ? userModeStyles.active : ''}`}
+                              onClick={() => handleLike(post.post_id)}
+                            >
+                              {post.like_count || 0}
+                            </button>
+                            <Link href={{
+                              pathname: '/posts/[id]',
+                              query: { id: post.post_id, username: router.query.username }
+                            }} className={userModeStyles.commentButton}>
+                              查看评论 ({post.comment_count || 0})
+                            </Link>
+                            {post.user_id === currentUser?.user_id && (
+                              <button
+                                onClick={() => handleDeletePost(post.post_id)}
+                                className={userModeStyles.deleteButton}
+                                title="删除帖子"
+                              >
+                                删除帖子
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className={userModeStyles.emptyState}>
+                        <p>暂无帖子</p>
+                        <button 
+                          className={userModeStyles.createButton}
+                          onClick={() => {
+                            setShowNewPostForm(true);
+                            scrollToTop();
+                          }}
+                        >
+                          发布第一个帖子
+                        </button>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </>
+              )}
             </>
-          )}
+          ) : activeContent === 'about' ? (
+            <AboutUsContent />
+          ) : null}
         </main>
       </div>
       
@@ -544,29 +601,12 @@ export default function UserMode() {
         </button>
       )}
       
-      {/* 退出确认对话框 */}
-      {showExitConfirm && (
-        <div className={userModeStyles.confirmDialog}>
-          <div className={userModeStyles.dialogContent}>
-            <h3 className={userModeStyles.dialogTitle}>确认退出</h3>
-            <p className={userModeStyles.dialogMessage}>您确定要退出论坛吗？</p>
-            <div className={userModeStyles.dialogActions}>
-              <button 
-                className={userModeStyles.cancelDialogButton}
-                onClick={() => setShowExitConfirm(false)}
-              >
-                取消
-              </button>
-              <button 
-                className={userModeStyles.confirmButton}
-                onClick={confirmExit}
-              >
-                确认退出
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* 使用独立的退出确认模态框组件 */}
+      <ExitConfirmModal
+        isOpen={showExitConfirm}
+        onClose={() => setShowExitConfirm(false)}
+        onConfirm={confirmExit}
+      />
       
       {/* 提示信息 */}
       {toast.show && (

@@ -81,6 +81,7 @@ export default function LoginModal({ isOpen, onClose }) {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="请输入用户名"
+              autoComplete="username"
               autoFocus
             />
           </div>
@@ -92,6 +93,7 @@ export default function LoginModal({ isOpen, onClose }) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="请输入密码"
+              autoComplete="current-password"
             />
           </div>
 

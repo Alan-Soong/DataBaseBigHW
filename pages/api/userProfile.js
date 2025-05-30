@@ -18,11 +18,10 @@ export default async function handler(req, res) {
   try {
     const connection = await getConnection();
     
-    // 获取用户基本信息
+    // 获取用户基本信息 (暂时去掉 LevelRule JOIN 进行测试)
     const [users] = await connection.execute(
-      `SELECT u.user_id, u.username, u.major, u.experience, u.level, l.level_name
+      `SELECT u.user_id, u.username, u.major, u.experience, u.level, u.level_id  -- 选择 u.level_id 而不是 l.level_name
        FROM Users u
-       JOIN LevelRule l ON u.level_id = l.level_id
        WHERE u.user_id = ?`,
       [userId]
     );
@@ -35,7 +34,25 @@ export default async function handler(req, res) {
       });
     }
     
-    const user = users[0];
+    let user = users[0];
+
+    // 如果提供了 viewerId (当前登录用户ID) 且不是查看自己的资料
+    const viewerId = req.query.viewerId; // 假设 viewerId 从 query 参数中获取
+    if (viewerId && parseInt(viewerId) !== parseInt(userId)) {
+      // 检查是否关注
+      const [followRows] = await connection.execute(
+        'SELECT 1 FROM followrelation WHERE follower_id = ? AND followed_id = ?',
+        [viewerId, userId]
+      );
+      user.isFollowing = followRows.length > 0;
+
+      // 检查是否拉黑
+      const [blockRows] = await connection.execute(
+        'SELECT 1 FROM blockrelation WHERE blocker_id = ? AND blocked_id = ?',
+        [viewerId, userId]
+      );
+      user.isBlocked = blockRows.length > 0;
+    }
     
     // 获取用户发帖数量
     const [postCountResult] = await connection.execute(
@@ -59,13 +76,13 @@ export default async function handler(req, res) {
     
     // 获取用户关注数量
     const [followingCountResult] = await connection.execute(
-      'SELECT COUNT(*) as following_count FROM FollowRelation WHERE follower_id = ?',
+      'SELECT COUNT(*) as following_count FROM followrelation WHERE follower_id = ?',
       [userId]
     );
     
     // 获取用户粉丝数量
     const [followerCountResult] = await connection.execute(
-      'SELECT COUNT(*) as follower_count FROM FollowRelation WHERE followed_id = ?',
+      'SELECT COUNT(*) as follower_count FROM followrelation WHERE followed_id = ?',
       [userId]
     );
     

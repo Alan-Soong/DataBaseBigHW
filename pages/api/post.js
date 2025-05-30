@@ -8,7 +8,7 @@ async function getPosts(page = 1, size = 10, connection, sectionId = null) {
     let query = `
       SELECT p.post_id, p.title, p.content, p.create_at, p.post_time,
        s.section_id, s.section_name,
-       u.username,
+       u.user_id, u.username,
        (SELECT COUNT(*) FROM comment c WHERE c.post_id = p.post_id) AS comment_count,
        (SELECT COUNT(*) FROM likes l WHERE l.target_type = 'post' AND l.target_id = p.post_id) AS like_count
         FROM post p

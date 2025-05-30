@@ -31,7 +31,7 @@ export default function AdminMode() {
         const res = await fetch(`/api/auth/session?username=${encodeURIComponent(username)}`,{credentials: 'include'});
         if (!res.ok) {
           if (res.status === 401) {
-            router.push('/login'); // 跳转到登录页
+            router.push('/'); // 跳转回首页
             return;
           }
           throw new Error(`HTTP error! status: ${res.status}`);

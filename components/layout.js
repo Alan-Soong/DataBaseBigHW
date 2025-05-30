@@ -2,11 +2,27 @@ import Head from 'next/head'
 import styles from '../components_styles/layout.module.css'
 import utilStyles from '../styles/utils.module.css'
 import Link from 'next/link'
+import { useRouter } from 'next/router'
+import ExitConfirmModal from './ExitConfirmModal'
+import { useState } from 'react'
 
 const name = '独属于你自己的BBS！'
 export const siteTitle = '属于你自己的BBS！'
 
 export default function Layout({ children, home }) {
+  const router = useRouter()
+  const [showBackConfirm, setShowBackConfirm] = useState(false)
+
+  const handleBackToHome = (e) => {
+    e.preventDefault()
+    setShowBackConfirm(true)
+  }
+
+  const confirmBackToHome = () => {
+    router.push('/')
+    setShowBackConfirm(false)
+  }
+
   return (
     <div className={styles.container}>
       <Head>
@@ -55,11 +71,18 @@ export default function Layout({ children, home }) {
       <main className={styles.mainContent}>{children}</main>
       {!home && (
         <div className={styles.backToHome}>
-          <Link href="/" className={styles.backLink}>
+          <a href="#" onClick={handleBackToHome} className={styles.backLink}>
             ← Back to home
-          </Link>
+          </a>
         </div>
       )}
+
+      <ExitConfirmModal
+        isOpen={showBackConfirm}
+        onClose={() => setShowBackConfirm(false)}
+        onConfirm={confirmBackToHome}
+      />
+
     </div>
   )
 }

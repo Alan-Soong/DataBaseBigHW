@@ -65,6 +65,7 @@ export default function AdminModal({ isOpen, onClose }) {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="请输入管理员账号"
+              autoComplete="username"
               autoFocus
             />
           </div>
@@ -76,6 +77,7 @@ export default function AdminModal({ isOpen, onClose }) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="请输入管理员密码"
+              autoComplete="current-password"
             />
           </div>
 

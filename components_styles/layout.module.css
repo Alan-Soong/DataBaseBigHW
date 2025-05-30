@@ -1,15 +1,20 @@
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 20px;
-  min-height: 90vh;
+  padding: 0 10px;
+  min-height: 100vh; /* 确保容器至少占满视口高度 */
   display: flex;
   flex-direction: column;
   padding-top: 0; /* 移除容器顶部内边距 */
+  /* 添加背景图片样式 */
+  background-image: url('/images/bbs-bg.jpg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: initial; /* 可选：使背景图片固定不动 */
 }
 
 .header {
-  padding: 1rem 0;
+  padding: 0.5rem 0; /* 减小内边距 */
   text-align: center;
   background: linear-gradient(135deg, #6e8efb, #a777e3);
   color: white;
@@ -22,18 +27,20 @@
 }
 
 .headerHomeImage {
-  width: 120px;  /* 适当缩小图片尺寸 */
-  height: 120px; /* 保持宽高一致 */
-  margin: 0 auto; /* 确保居中 */
+  width: 80%; /* 使用相对宽度 */
+  max-width: 150px; /* 设置最大宽度 */
+  height: auto; /* 高度自适应以保持纵横比 */
+  margin: 0.5rem auto; /* 减小图片顶部外边距，保持居中 */
+  object-fit: contain; /* 保持图片纵横比，防止拉伸 */
 }
 
 .headerHomeImage:hover {
-  transform: scale(1.05);
+  transform: scale(1.1);
 }
 
 .heading {
-  font-size: 2.5rem;
-  margin-top: 1rem;
+  font-size: 2rem; /* 适当减小字体大小 */
+  margin-top: 0.5rem; /* 减小顶部外边距 */
   text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
 }
 
@@ -51,12 +58,19 @@
 .mainContent {
   flex: 1;
   padding: 0 1rem;
-  margin-top: 0.5rem;
+  margin-top: 2rem; /* 增加顶部外边距，拉开与头部的间距 */
 }
 
 .backToHome {
-  margin: 2rem 0;
-  text-align: center;
+  position: fixed; /* 固定定位 */
+  bottom: 20px; /* 距离底部 20px */
+  right: 20px; /* 距离右侧 20px */
+  z-index: 1000; /* 确保在其他内容之上 */
+  /* 可以添加一些样式使其看起来像一个"框" */
+  background-color: rgba(0, 0, 0, 0.6); /* 半透明背景 */
+  padding: 10px 15px; /* 内边距 */
+  border-radius: 8px; /* 圆角 */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 .logoLink, .homeLink, .backLink {

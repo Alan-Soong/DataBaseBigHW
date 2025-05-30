@@ -4,6 +4,7 @@ import Head from 'next/head';
 import Layout from '../../components/layout';
 import utilStyles from '../../styles/utils.module.css';
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 
 // 添加时间格式化函数
 function formatDate(dateString) {
@@ -62,7 +63,11 @@ export default function PostDetail() {
     const result = await fetch('/api/post', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'like', targetType: 'post', targetId: id, userId: loginStatus.userId })
+      body: JSON.stringify({ 
+        action: 'like', 
+        postId: id,
+        userId: loginStatus.userId 
+      })
     }).then(r => r.json());
     setLikeCount(result.count);
     setLiked(result.liked);
@@ -111,7 +116,11 @@ export default function PostDetail() {
     const result = await fetch('/api/post', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'like', targetType: 'comment', targetId: commentId, userId: loginStatus.userId })
+      body: JSON.stringify({ 
+        action: 'like', 
+        commentId: commentId,
+        userId: loginStatus.userId 
+      })
     }).then(r => r.json());
     setComments(comments => comments.map(c =>
       c.comment_id === commentId ? { ...c, like_count: result.count, liked: result.liked } : c
@@ -157,7 +166,12 @@ export default function PostDetail() {
                   <div className={utilStyles.commentAvatar}>
                     {(comment.username || '匿名用户').charAt(0)}
                   </div>
-                  <span>{comment.username || '匿名用户'}</span>
+                  <Link href={{
+                    pathname: '/user/[id]',
+                    query: { id: comment.user_id, username: comment.username || '' }
+                  }}>
+                    {comment.username}
+                  </Link>
                 </div>
                 <span className={utilStyles.commentDate}>{formatDate(comment.create_at)}</span>
                 <button
