@@ -888,3 +888,182 @@
 @keyframes fadeOut {
   to { opacity: 0; visibility: hidden; }
 }
+
+.statButton {
+  background: none;
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+  color: #0070f3;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+  width: 100%;
+  text-align: left;
+}
+
+.statButton:hover {
+  background-color: #f0f0f0;
+  color: #0051a2;
+}
+
+.statBlock {
+  display: flex;
+  align-items: center;
+  margin: 8px 0;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.statBlock:hover {
+  background-color: #f5f5f5;
+}
+
+/* Add a new style for the list view buttons */
+.listViewButton {
+  padding: var(--spacing-small) var(--spacing-large);
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  width: 100%; /* Make buttons full width */
+  text-align: center; /* Center text */
+}
+
+.listViewButton:hover {
+  background-color: var(--primary-hover);
+}
+
+/* 评论相关样式 */
+.commentSection {
+  margin-top: var(--spacing-large);
+  padding: var(--spacing-large);
+  background-color: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+}
+
+.commentInputArea {
+  margin-bottom: var(--spacing-large);
+}
+
+.commentInput {
+  width: 100%;
+  min-height: 100px;
+  padding: var(--spacing-medium);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  margin-bottom: var(--spacing-medium);
+  resize: vertical;
+  font-family: inherit;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--text-color);
+  background-color: var(--bg-light);
+  transition: var(--transition);
+}
+
+.commentInput:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.commentsTitle {
+  font-size: 1.5rem;
+  color: var(--text-color);
+  margin-bottom: var(--spacing-medium);
+  padding-bottom: var(--spacing-small);
+  border-bottom: 2px solid var(--primary-color);
+}
+
+.commentList {
+  /* 顶层评论列表容器无特定缩进 */
+}
+
+.commentItem {
+  padding: var(--spacing-medium);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  margin-bottom: var(--spacing-medium);
+  background-color: white;
+  transition: var(--transition);
+  word-wrap: break-word; /* 防止长单词或URL溢出 */
+  overflow-wrap: break-word; /* 防止长单词或URL溢出 */
+}
+
+.commentItem:hover {
+  box-shadow: var(--box-shadow);
+  transform: translateY(-2px);
+}
+
+/* 一级回复的评论项 */
+.replyItem {
+  margin-left: var(--spacing-large); /* 添加左侧缩进 */
+  border-left: 2px solid var(--border-color); /* 添加左侧边线 */
+  padding-left: var(--spacing-medium); /* 添加左侧内边距 */
+}
+
+/* 二级及更深回复的评论项 - 移除额外缩进，保留回复关系 */
+.nestedReplyItem {
+   margin-left: 0; /* 移除额外的左侧外边距 */
+   padding-left: var(--spacing-medium); /* 保留内边距 */
+   border-left: none; /* 移除左侧边线，由父级repliesList的边线控制 */
+}
+
+.commentContent {
+  margin: var(--spacing-medium) 0;
+  line-height: 1.6;
+  color: var(--text-color);
+}
+
+/* 回复对象用户名样式 */
+.replyTo {
+  font-weight: bold;
+  color: var(--primary-color); /* 使用主题色或其他颜色 */
+  margin-right: var(--spacing-small);
+}
+
+.commentMeta {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-medium);
+  color: var(--text-lighter);
+  font-size: 0.9rem;
+}
+
+.replyInputArea {
+  margin-top: var(--spacing-medium);
+  padding: var(--spacing-medium);
+  background-color: var(--bg-light);
+  border-radius: var(--border-radius);
+  width: 100%; /* 确保在小屏幕上填充宽度 */
+  box-sizing: border-box; /* 包含padding在宽度内 */
+}
+
+.repliesList {
+  /* 这个容器只用于组织结构，不控制缩进 */
+   margin-left: 0; /* 移除容器的缩进 */
+   padding-left: 0; /* 移除容器的内边距 */
+   border-left: none; /* 移除容器的边线 */
+}
+
+.replyButton {
+  background: none;
+  border: none;
+  color: var(--primary-color);
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: var(--spacing-small);
+  transition: var(--transition);
+}
+
+.replyButton:hover {
+  color: var(--primary-hover);
+  text-decoration: underline;
+}

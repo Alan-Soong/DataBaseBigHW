@@ -25,6 +25,13 @@ export default function UserMode() {
   const [activeSection, setActiveSection] = useState(null);
   const [activeContent, setActiveContent] = useState('posts');
 
+  // 新增搜索相关的状态
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchType, setSearchType] = useState('title'); // 默认为按标题搜索
+  const [searchResults, setSearchResults] = useState(null); // null 表示未进行搜索或无结果，数组表示有结果
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState(null);
+
   // 获取当前登录用户信息
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -129,10 +136,11 @@ export default function UserMode() {
       }
     };
 
-    if (!loading && currentUser) {
+    // 只有在没有搜索结果时才自动获取所有或按频道过滤的帖子
+    if (!loading && currentUser && searchResults === null) {
       fetchPosts();
     }
-  }, [loading, currentUser, activeSection]);
+  }, [loading, currentUser, activeSection, searchResults]); // 依赖 searchResults
 
   // 监听滚动事件，显示/隐藏返回顶部按钮
   useEffect(() => {
@@ -314,6 +322,45 @@ export default function UserMode() {
     }
   };
 
+  // 新增处理搜索的函数
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) {
+      setSearchResults(null); // 清空搜索结果如果查询为空
+      setSearchError(null);
+      return; // 如果搜索关键词为空，则不执行搜索
+    }
+    
+    setSearchLoading(true);
+    setSearchError(null);
+    
+    try {
+      const res = await fetch(`/api/searchPosts?query=${encodeURIComponent(searchQuery)}&searchType=${searchType}`);
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      const data = await res.json();
+      if (data.success) {
+        setSearchResults(data.posts);
+      } else {
+        setSearchError(data.message || '搜索失败');
+        setSearchResults([]); // 搜索失败也清空结果
+      }
+    } catch (e) {
+      console.error('搜索失败:', e);
+      setSearchError('搜索过程中发生错误');
+      setSearchResults([]); // 发生错误也清空结果
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  // 清除搜索结果，返回显示所有帖子
+  const clearSearch = () => {
+    setSearchQuery('');
+    setSearchResults(null);
+    setSearchError(null);
+  };
+
   return (
     <Layout>
       <Head>
@@ -429,160 +476,222 @@ export default function UserMode() {
         <main className={userModeStyles.mainContent}>
           {activeContent === 'posts' ? (
             <>
-              <h1 className={userModeStyles.pageTitle}>
-                校园论坛
-                {activeSection !== null && sections.find(s => s.section_id === activeSection) && 
-                  ` - ${sections.find(s => s.section_id === activeSection).section_name}`
-                }
-              </h1>
-              
-              {loading ? (
-                <div className={userModeStyles.loading}></div>
-              ) : (
-                <>
-                  {showNewPostForm && (
-                    <div className={userModeStyles.newPostForm}>
-                      <h2>发布新帖子</h2>
-                      <form onSubmit={handleSubmitPost}>
-                        <div className={userModeStyles.formGroup}>
-                          <label htmlFor="section_id">选择频道</label>
-                          <select 
-                            id="section_id" 
-                            name="section_id" 
-                            value={newPost.section_id}
-                            onChange={handleInputChange}
-                            required
-                          >
-                            <option value="">-- 请选择频道 --</option>
-                            {sections && sections.map(section => (
-                              <option key={section.section_id} value={section.section_id}>
-                                {section.section_name}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        
-                        <div className={userModeStyles.formGroup}>
-                          <label htmlFor="title">标题</label>
-                          <input 
-                            type="text" 
-                            id="title" 
-                            name="title" 
-                            value={newPost.title}
-                            onChange={handleInputChange}
-                            placeholder="请输入帖子标题"
-                            required
-                          />
-                        </div>
-                        
-                        <div className={userModeStyles.formGroup}>
-                          <label htmlFor="content">内容</label>
-                          <textarea 
-                            id="content" 
-                            name="content" 
-                            value={newPost.content}
-                            onChange={handleInputChange}
-                            placeholder="请输入帖子内容"
-                            rows="6"
-                            required
-                          ></textarea>
-                        </div>
-                        
-                        {formError && <div className={userModeStyles.error}>{formError}</div>}
-                        
-                        <div className={userModeStyles.formActions}>
-                          <button 
-                            type="button" 
-                            className={userModeStyles.cancelButton}
-                            onClick={() => {
-                              setShowNewPostForm(false);
-                              setFormError('');
-                            }}
-                          >
-                            取消
-                          </button>
-                          <button type="submit" className={userModeStyles.submitButton}>
-                            发布帖子
-                          </button>
-                        </div>
-                      </form>
+              <div className={userModeStyles.postCard} style={{ marginBottom: '20px', textAlign: 'center' }}>
+                <h1 className={userModeStyles.heading} style={{ margin: 0 }}>
+                  校园论坛
+                  {activeSection !== null && sections.find(s => s.section_id === activeSection) &&
+                    ` - ${sections.find(s => s.section_id === activeSection).section_name}`
+                  }
+                </h1>
+              </div>
+
+              <div className={userModeStyles.postCard} style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                <button onClick={() => setShowNewPostForm(!showNewPostForm)} className={userModeStyles.button}>
+                  {showNewPostForm ? '取消发帖' : '我要发帖'}
+                </button>
+
+                <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '10px', marginLeft: 'auto' }}>
+                  <span>频道:</span>
+                  <button 
+                    className={`${userModeStyles.button} ${activeSection === null ? userModeStyles.active : ''}`} 
+                    onClick={() => handleSectionFilter(null)} 
+                  >
+                    全部
+                  </button>
+                  {sections.map(section => (
+                    <button 
+                      key={section.section_id} 
+                      className={`${userModeStyles.button} ${activeSection === section.section_id ? userModeStyles.active : ''}`} 
+                      onClick={() => handleSectionFilter(section.section_id)}
+                    >
+                      {section.section_name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {showNewPostForm && (
+                <div className={userModeStyles.newPostForm} style={{ marginBottom: '20px' }}>
+                  <h2>发布新帖子</h2>
+                  <form onSubmit={handleSubmitPost}>
+                    <div className={userModeStyles.formGroup}>
+                      <label htmlFor="section_id">选择频道</label>
+                      <select 
+                        id="section_id" 
+                        name="section_id" 
+                        value={newPost.section_id}
+                        onChange={handleInputChange}
+                        required
+                      >
+                        <option value="">-- 请选择频道 --</option>
+                        {sections && sections.map(section => (
+                          <option key={section.section_id} value={section.section_id}>
+                            {section.section_name}
+                          </option>
+                        ))}
+                      </select>
                     </div>
-                  )}
-                  
-                  <div className={userModeStyles.postList}>
-                    {postsLoading ? (
-                      <div className={userModeStyles.loading}>加载帖子中...</div>
-                    ) : posts && posts.length > 0 ? (
-                      posts.map(post => (
-                        <div key={post.post_id} className={userModeStyles.postCard}>
-                          <div className={userModeStyles.postHeader}>
-                            <h3 className={userModeStyles.postCardTitle}>
-                              <Link href={{
-                                pathname: '/posts/[id]',
-                                query: { id: post.post_id, username: router.query.username }
-                              }}>
-                                {post.title}
-                              </Link>
-                            </h3>
-                            <div className={userModeStyles.postMeta}>
-                              <span>作者: 
-                                <Link href={{
-                                   pathname: '/user/[id]',
-                                   query: { id: post.user_id, username: post.username || '' }
-                                }}>
-                                  {post.username}
-                                </Link>
-                              </span>
-                              <span>频道: {post.section_name || '未分类'}</span>
-                              <span>发布于: {formatDate(post.post_time)}</span>
-                              <span>评论: {post.comment_count || 0}</span>
-                            </div>
-                          </div>
-                          <div className={userModeStyles.postContent}>
-                            {post.content && post.content.length > 200 ? `${post.content.substring(0, 200)}...` : post.content}
-                          </div>
-                          <div className={userModeStyles.postActions}>
-                            <button 
-                              className={`${userModeStyles.likeButton} ${post.liked ? userModeStyles.active : ''}`}
-                              onClick={() => handleLike(post.post_id)}
-                            >
-                              {post.like_count || 0}
-                            </button>
-                            <Link href={{
-                              pathname: '/posts/[id]',
-                              query: { id: post.post_id, username: router.query.username }
-                            }} className={userModeStyles.commentButton}>
-                              查看评论 ({post.comment_count || 0})
-                            </Link>
-                            {post.user_id === currentUser?.user_id && (
-                              <button
-                                onClick={() => handleDeletePost(post.post_id)}
-                                className={userModeStyles.deleteButton}
-                                title="删除帖子"
-                              >
-                                删除帖子
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className={userModeStyles.emptyState}>
-                        <p>暂无帖子</p>
-                        <button 
-                          className={userModeStyles.createButton}
-                          onClick={() => {
-                            setShowNewPostForm(true);
-                            scrollToTop();
-                          }}
-                        >
-                          发布第一个帖子
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </>
+                    
+                    <div className={userModeStyles.formGroup}>
+                      <label htmlFor="title">标题</label>
+                      <input 
+                        type="text" 
+                        id="title" 
+                        name="title" 
+                        value={newPost.title}
+                        onChange={handleInputChange}
+                        placeholder="请输入帖子标题"
+                        required
+                      />
+                    </div>
+                    
+                    <div className={userModeStyles.formGroup}>
+                      <label htmlFor="content">内容</label>
+                      <textarea 
+                        id="content" 
+                        name="content" 
+                        value={newPost.content}
+                        onChange={handleInputChange}
+                        placeholder="请输入帖子内容"
+                        rows="6"
+                        required
+                      ></textarea>
+                    </div>
+                    
+                    {formError && <div className={userModeStyles.error}>{formError}</div>}
+                    
+                    <div className={userModeStyles.formActions}>
+                      <button 
+                        type="button" 
+                        className={userModeStyles.cancelButton}
+                        onClick={() => {
+                          setShowNewPostForm(false);
+                          setFormError('');
+                        }}
+                      >
+                        取消
+                      </button>
+                      <button type="submit" className={userModeStyles.submitButton}>
+                        发布帖子
+                      </button>
+                    </div>
+                  </form>
+                </div>
               )}
+
+              <div className={userModeStyles.postCard} style={{ marginBottom: '20px', padding: '15px' }}>
+                <h2 className={userModeStyles.postCardTitle} style={{ marginTop: '0' }}>搜索帖子</h2>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <input
+                    type="text"
+                    placeholder="输入搜索关键词..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className={userModeStyles.formInput}
+                    style={{ flexGrow: 1, minWidth: '250px' }}
+                    onKeyPress={(e) => { if (e.key === 'Enter') handleSearch(); }}
+                  />
+                  <select 
+                    value={searchType} 
+                    onChange={(e) => setSearchType(e.target.value)} 
+                    className={userModeStyles.formInput}
+                  >
+                    <option value="title">按标题</option>
+                    <option value="content">按内容</option>
+                  </select>
+                  <button onClick={handleSearch} disabled={searchLoading || !searchQuery.trim()} className={userModeStyles.button}>搜索</button>
+                  {searchResults !== null && (
+                    <button onClick={clearSearch} className={`${userModeStyles.button} ${userModeStyles.secondaryButton}`}>清除搜索</button>
+                  )}
+                </div>
+                {searchLoading && <p>搜索中...</p>}
+                {searchError && <p className={userModeStyles.error}>搜索失败: {searchError}</p>}
+              </div>
+
+              <div className={userModeStyles.postList}>
+                {postsLoading ? (
+                  <div className={userModeStyles.loading}>加载帖子中...</div>
+                ) : searchResults !== null ? (
+                  searchResults.length > 0 ? (
+                    searchResults.map(post => (
+                      <div key={post.post_id} className={userModeStyles.postCard}>
+                        <h2 className={userModeStyles.postCardTitle}>
+                          <Link href={`/posts/${post.post_id}`}>
+                            {post.title}
+                          </Link>
+                        </h2>
+                        <div className={userModeStyles.postMeta}>
+                          <span>作者: {post.username}</span>
+                          <span>发布时间: {formatDate(post.post_time)}</span>
+                          <span>评论数: {post.comment_count}</span>
+                          <span>点赞数: {post.like_count}</span>
+                        </div>
+                        <div className={userModeStyles.postContent}>
+                          {post.content.substring(0, 200)}{post.content.length > 200 ? '...' : ''}
+                        </div>
+                        <div className={userModeStyles.postActions}>
+                          <button 
+                            onClick={() => handleLike(post.post_id)}
+                            className={`${userModeStyles.likeButton} ${post.liked ? userModeStyles.active : ''}`}
+                          >
+                            {post.like_count}
+                          </button>
+                          <Link href={`/posts/${post.post_id}#comments`} className={userModeStyles.commentButton}>
+                            评论 {post.comment_count}
+                          </Link>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p>没有找到符合条件的帖子。</p>
+                  )
+                ) : (
+                  posts.length > 0 ? (
+                    posts.map(post => (
+                      <div key={post.post_id} className={userModeStyles.postCard}>
+                        <h2 className={userModeStyles.postCardTitle}>
+                          <Link href={`/posts/${post.post_id}`}>
+                            {post.title}
+                          </Link>
+                        </h2>
+                        <div className={userModeStyles.postMeta}>
+                          <span>作者: {post.username}</span>
+                          <span>发布时间: {formatDate(post.post_time)}</span>
+                          <span>评论数: {post.comment_count}</span>
+                          <span>点赞数: {post.like_count}</span>
+                        </div>
+                        <div className={userModeStyles.postContent}>
+                          {post.content.substring(0, 200)}{post.content.length > 200 ? '...' : ''}
+                        </div>
+                        <div className={userModeStyles.postActions}>
+                          <button 
+                            onClick={() => handleLike(post.post_id)}
+                            className={`${userModeStyles.likeButton} ${post.liked ? userModeStyles.active : ''}`}
+                          >
+                            {post.like_count}
+                          </button>
+                          <Link href={`/posts/${post.post_id}#comments`} className={userModeStyles.commentButton}>
+                            评论 {post.comment_count}
+                          </Link>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className={userModeStyles.emptyState}>
+                      <p>暂无帖子</p>
+                      <button 
+                        className={userModeStyles.createButton}
+                        onClick={() => {
+                          setShowNewPostForm(true);
+                          scrollToTop();
+                        }}
+                      >
+                        发布第一个帖子
+                      </button>
+                    </div>
+                  )
+                )}
+              </div>
             </>
           ) : activeContent === 'about' ? (
             <AboutUsContent />
@@ -590,7 +699,6 @@ export default function UserMode() {
         </main>
       </div>
       
-      {/* 返回顶部按钮 */}
       {showBackToTop && (
         <button 
           className={`${userModeStyles.backToTop} ${showBackToTop ? userModeStyles.visible : ''}`}
@@ -601,14 +709,12 @@ export default function UserMode() {
         </button>
       )}
       
-      {/* 使用独立的退出确认模态框组件 */}
       <ExitConfirmModal
         isOpen={showExitConfirm}
         onClose={() => setShowExitConfirm(false)}
         onConfirm={confirmExit}
       />
       
-      {/* 提示信息 */}
       {toast.show && (
         <div className={userModeStyles.toast}>
           {toast.message}
