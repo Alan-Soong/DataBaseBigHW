@@ -489,9 +489,8 @@
 }
 
 /* 帖子列表容器 */
-.postList {
+/* .postList {
   /* 帖子列表本身不需要flexbox，让帖子卡片自然堆叠 */
-}
 
 /* 个人主页主要内容布局 */
 .profileContent {
@@ -791,7 +790,7 @@
   border-radius: var(--border-radius);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4); /* 调整阴影 */
   text-align: center;
-  max-width: 450px; /* 调整最大宽度 */
+  max-width: 600px; /* 调整最大宽度，使其更大 */
   width: 90%;
 }
 
@@ -809,40 +808,37 @@
 
 .dialogActions {
   display: flex;
-  justify-content: center;
-  gap: var(--spacing-medium); /* 调整按钮间距 */
+  justify-content: center; /* 居中按钮 */
+  gap: 15px; /* 增加按钮间距 */
+  margin-top: 25px; /* 调整顶部外边距 */
+  margin-bottom: 15px; /* 增加底部外边距 */
 }
 
 .dialogActions button {
-  padding: var(--spacing-small) var(--spacing-large);
+  padding: 8px 15px;
   border: none;
-  border-radius: var(--border-radius);
+  border-radius: 4px;
   cursor: pointer;
-  font-size: 1rem;
-  transition: var(--transition);
-  font-weight: 500;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
 }
 
-.dialogActions button:first-child {
-  background-color: var(--border-color); /* 使用边框颜色作为取消背景 */
-  color: var(--text-color);
+.cancelButton {
+  background-color: var(--primary-color); /* 将背景色改为蓝色 */
+  color: white; /* 文字颜色改为白色 */
 }
 
-.dialogActions button:first-child:hover {
-  background-color: #ccc; /* 悬停颜色 */
+.cancelButton:hover {
+  background-color: var(--primary-hover); /* 悬停时使用主题色的hover效果 */
 }
 
-.dialogActions button:last-child {
-  background-color: var(--danger-color);
+.confirmButton {
+  background-color: #d9534f; /* Red background for confirmation/danger action */
   color: white;
 }
 
-.dialogActions button:last-child:hover {
-  background-color: var(--danger-hover);
-}
-
-.dialogActions button:hover {
-  opacity: 1; /* 移除 hover 的 opacity 效果，使用 background-color 变化 */
+.confirmButton:hover {
+  background-color: #c9302c;
 }
 
 /* 返回顶部按钮样式 */

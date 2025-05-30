@@ -190,7 +190,7 @@
   background: none;
   border: none;
   color: var(--text-light);
-  font-size: 0.95rem;
+  font-size: 1.1rem;
   padding: 8px 12px;
   border-radius: var(--border-radius);
   cursor: pointer;
@@ -552,6 +552,9 @@
   padding: 32px 0;
   background: #f7f8fa;
   min-height: 100vh;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
 }
 
 /* 基础信息区 */
@@ -560,6 +563,7 @@
   flex-direction: column;
   align-items: center;
   margin-bottom: 32px;
+  width: 100%;
 }
 
 .profileAvatar {
@@ -583,6 +587,18 @@
   gap: 12px;
 }
 
+.profileInfo h2 {
+  font-size: 1.8rem;
+  color: var(--text-color);
+  margin: 0;
+}
+
+.profileInfo p {
+  font-size: 1rem;
+  color: var(--text-light);
+  margin: 0;
+}
+
 .infoBlock {
   background: #fff;
   border-radius: 12px;
@@ -601,6 +617,7 @@
   margin: 24px 0;
   flex-wrap: wrap;
   justify-content: center;
+  width: 100%;
 }
 
 .statBlock {
@@ -609,9 +626,17 @@
   padding: 10px 24px;
   min-width: 120px;
   text-align: center;
-  font-size: 16px;
+  font-size: 1rem;
+  color: var(--text-color);
   margin: 4px 0;
   box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+}
+
+.statBlock strong {
+  display: block;
+  font-size: 1.2rem;
+  color: var(--primary-color);
+  margin-bottom: 4px;
 }
 
 /* 操作按钮区 */
@@ -624,18 +649,21 @@
 
 .profileActions button,
 .actionButton {
-  background: #4a90e2;
-  color: #fff;
+  background: var(--primary-color);
+  color: white;
   border: none;
-  border-radius: 8px;
-  padding: 8px 24px;
-  font-size: 16px;
+  border-radius: var(--border-radius);
+  padding: 10px 20px;
+  font-size: 1rem;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: var(--transition);
+  text-decoration: none;
+  display: inline-block;
 }
+
 .profileActions button:disabled,
 .actionButton:disabled {
-  background: #b0c4de;
+  background: var(--border-color);
   cursor: not-allowed;
 }
 
@@ -652,12 +680,35 @@
 .recentPostItem {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  border-bottom: 1px solid #f0f0f0;
+  gap: 8px;
+  border-bottom: 1px solid var(--border-color);
   padding: 12px 0;
+  transition: background-color 0.2s ease;
 }
 .recentPostItem:last-child {
   border-bottom: none;
+}
+
+.recentPostItem a {
+  font-size: 1.1rem;
+  color: var(--text-color);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.recentPostItem a:hover {
+  color: var(--primary-color);
+  text-decoration: underline;
+}
+
+.recentPostItem p {
+  font-size: 0.9rem;
+  color: var(--text-light);
+  margin: 0;
+}
+
+.recentPostItem:hover {
+  background-color: var(--bg-light);
 }
 
 @media (max-width: 600px) {
@@ -678,4 +729,144 @@
     padding: 6px 8px;
     font-size: 14px;
   }
+}
+
+/* 通用按钮样式 */
+.button {
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  padding: 10px 20px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: var(--transition);
+  text-decoration: none;
+  display: inline-block;
+}
+
+.button:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-2px);
+}
+
+.button:disabled {
+  background: var(--border-color);
+  cursor: not-allowed;
+}
+
+/* 次要按钮样式 */
+.secondaryButton {
+  background: transparent;
+  color: var(--text-light);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 10px 20px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: var(--transition);
+  text-decoration: none;
+  display: inline-block;
+}
+
+.secondaryButton:hover {
+  background-color: var(--bg-dark);
+  color: var(--text-color);
+}
+
+@media (min-width: 768px) {
+  .profileBase {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 40px;
+  }
+
+  .profileInfo {
+    align-items: flex-start;
+    flex-grow: 1;
+  }
+
+  .profileStats {
+    margin-top: 0;
+    justify-content: flex-start;
+  }
+}
+
+/* 新增：列表模态框样式 */
+.listModalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.listModalContent {
+  background-color: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  padding: 20px;
+  width: 90%;
+  max-width: 500px; /* 模态框最大宽度 */
+  max-height: 80vh; /* 模态框最大高度 */
+  overflow-y: auto; /* 内容过多时滚动 */
+  display: flex;
+  flex-direction: column;
+}
+
+.listModalTitle {
+  font-size: 1.4rem;
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: var(--text-color);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 10px;
+}
+
+.modalList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex-grow: 1; /* 列表区域填充剩余空间 */
+}
+
+.modalListItem {
+  padding: 10px 0;
+  border-bottom: 1px dashed var(--border-color);
+}
+
+.modalListItem:last-child {
+  border-bottom: none;
+}
+
+.modalListItem a {
+  color: var(--text-color);
+  text-decoration: none;
+  font-size: 1rem;
+}
+
+.modalListItem a:hover {
+  color: var(--primary-color);
+  text-decoration: underline;
+}
+
+.listModalCloseButton {
+  align-self: flex-end; /* 按钮靠右 */
+  margin-top: 20px;
+  padding: 8px 16px;
+  background-color: var(--bg-dark); /* 使用次要按钮背景色 */
+  color: var(--text-color);
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.listModalCloseButton:hover {
+  background-color: var(--border-color);
 }

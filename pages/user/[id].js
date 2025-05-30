@@ -5,6 +5,7 @@ import utilStyles from '../../styles/utils.module.css';
 import userModeStyles from '../../styles/user_mode.module.css';
 import Link from 'next/link';
 import Head from 'next/head';
+import ListModal from '../../components/ListModal';
 
 export default function UserProfile() {
   const router = useRouter();
@@ -18,9 +19,13 @@ export default function UserProfile() {
   const [visibilitySettings, setVisibilitySettings] = useState({});
   const [showVisibilityModal, setShowVisibilityModal] = useState(false);
   const [editingField, setEditingField] = useState(null);
-  const [recentPosts, setRecentPosts] = useState([]);
   const [viewerId, setViewerId] = useState(null);
   const [toast, setToast] = useState({ show: false, message: '' });
+
+  // 列表模态框相关状态
+  const [showListModal, setShowListModal] = useState(false);
+  const [listModalTitle, setListModalTitle] = useState('');
+  const [listModalData, setListModalData] = useState([]);
 
   // 获取当前登录用户信息
   useEffect(() => {
@@ -68,7 +73,6 @@ export default function UserProfile() {
         const data = await res.json();
         if (data.success) {
           setUserProfile(data.user);
-          setRecentPosts(data.recent_posts || []);
           console.log('User Profile:', data.user);
           // 根据后端返回的数据更新关注和拉黑状态
           if (data.user) {
@@ -84,13 +88,11 @@ export default function UserProfile() {
           console.error('获取用户资料失败:', data.message);
           showToast('获取用户资料失败: ' + data.message);
           setUserProfile(null);
-          setRecentPosts([]);
         }
       } catch (error) {
         console.error('获取用户资料失败:', error);
         showToast('获取用户资料失败: ' + error.message);
         setUserProfile(null);
-        setRecentPosts([]);
       } finally {
         setLoading(false);
       }
@@ -332,7 +334,7 @@ export default function UserProfile() {
   useEffect(() => {
     const fetchViewer = async () => {
       try {
-        const res = await fetch('/api/auth/checkLogin');
+        const res = await fetch('/api/checkLogin');
         const data = await res.json();
         if (data.isLoggedIn && data.userId) {
           setViewerId(data.userId);
@@ -353,6 +355,71 @@ export default function UserProfile() {
     setTimeout(() => {
       setToast({ show: false, message: '' });
     }, 3000);
+  };
+
+  useEffect(() => {
+    console.log('userProfile.recent_posts changed:', userProfile?.recent_posts || []);
+  }, [userProfile?.recent_posts]);
+
+  // 处理查看关注列表
+  const handleViewFollowing = async () => {
+    if (!userProfile || !userProfile.user_id) return;
+    try {
+      const res = await fetch(`/api/user/getFollowing?userId=${userProfile.user_id}`);
+      const data = await res.json();
+      if (data.success) {
+        setListModalTitle('关注列表');
+        setListModalData(data.following);
+        setShowListModal(true);
+      } else {
+        showToast(data.message || '获取关注列表失败');
+      }
+    } catch (error) {
+      console.error('获取关注列表失败:', error);
+      showToast('获取关注列表失败');
+    }
+  };
+
+  // 处理查看粉丝列表
+  const handleViewFollowers = async () => {
+    if (!userProfile || !userProfile.user_id) return;
+     try {
+      const res = await fetch(`/api/user/getFollowers?userId=${userProfile.user_id}`);
+      const data = await res.json();
+      if (data.success) {
+        setListModalTitle('粉丝列表');
+        setListModalData(data.followers);
+        setShowListModal(true);
+      } else {
+        showToast(data.message || '获取粉丝列表失败');
+      }
+    } catch (error) {
+      console.error('获取粉丝列表失败:', error);
+      showToast('获取粉丝列表失败');
+    }
+  };
+
+  // 处理查看拉黑列表
+  const handleViewBlocks = async () => {
+    if (!currentUser || !isOwnProfile) { // 只有当前用户查看自己的主页时才能查看拉黑列表
+      showToast('无权查看拉黑列表');
+      return;
+    }
+    try {
+      // 拉黑列表API不需要targetUserId，它基于当前登录用户
+      const res = await fetch('/api/user/getBlocks'); 
+      const data = await res.json();
+      if (data.success) {
+        setListModalTitle('拉黑列表');
+        setListModalData(data.blockedList);
+        setShowListModal(true);
+      } else {
+        showToast(data.message || '获取拉黑列表失败');
+      }
+    } catch (error) {
+      console.error('获取拉黑列表失败:', error);
+      showToast('获取拉黑列表失败');
+    }
   };
 
   if (loading) {
@@ -457,6 +524,18 @@ export default function UserProfile() {
                  </div>
               )}
 
+              {/* 新增的列表按钮容器 */}
+              <div className={utilStyles.profileActions}> {/* 可以复用或新增一个样式类 */}
+                 {/* 查看关注列表按钮 */}
+                 <button className={utilStyles.secondaryButton} onClick={handleViewFollowing}>查看关注 ({userProfile?.following_count || 0})</button>
+                 {/* 查看粉丝列表按钮 */}
+                 <button className={utilStyles.secondaryButton} onClick={handleViewFollowers}>查看粉丝 ({userProfile?.follower_count || 0})</button>
+                 {/* 查看拉黑列表按钮 (仅对自己可见) */}
+                 {isOwnProfile && (
+                    <button className={utilStyles.secondaryButton} onClick={handleViewBlocks}>查看拉黑列表</button>
+                 )}
+              </div>
+
               {/* 关注和拉黑按钮 */} 
               {viewerId && viewerId !== userProfile.user_id && (
                 <div className={userModeStyles.profileActions}> {/* 应用 userModeStyles.profileActions */}
@@ -483,9 +562,9 @@ export default function UserProfile() {
             {/* 最近发帖区（右侧或底部堆叠） */} 
             <div className={userModeStyles.profileRecentPosts}> {/* 应用 userModeStyles.profileRecentPosts */}
               <h2 className={userModeStyles.profileRecentPostsTitle}>最近发布的帖子</h2> {/* 应用 userModeStyles.profileRecentPostsTitle */}
-              {recentPosts && recentPosts.length > 0 ? (
+              {userProfile.recent_posts && userProfile.recent_posts.length > 0 ? (
                 <div className={userModeStyles.postList}> {/* 应用 userModeStyles.postList */} 
-                  {recentPosts.map(post => (
+                  {userProfile.recent_posts.map(post => (
                      <div key={post.post_id} className={userModeStyles.postCard}> {/* 应用 userModeStyles.postCard */}
                         <div className={userModeStyles.postHeader}> {/* 应用 userModeStyles.postHeader */}
                           <h3 className={userModeStyles.postCardTitle}> {/* 应用 userModeStyles.postCardTitle */}
@@ -536,6 +615,17 @@ export default function UserProfile() {
           {toast.message}
         </div>
       )}
+
+       {/* 列表模态框 */}
+       {showListModal && (
+           <ListModal
+               isOpen={showListModal}
+               onClose={() => setShowListModal(false)}
+               title={listModalTitle}
+               data={listModalData}
+           />
+       )}
+
        {/* 可见性设置模态框 (您可以根据需要创建并在这里引入) */}
        {/*
        {showVisibilityModal && (

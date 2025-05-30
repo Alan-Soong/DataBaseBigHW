@@ -63,7 +63,7 @@ async function getComments(postId) {
   const connection = await getConnection();
   try {
     const [rows] = await connection.execute(
-      `SELECT c.comment_id, c.content, c.create_at, c.user_id, u.username,
+      `SELECT c.comment_id, c.content, c.create_at, c.user_id, u.username, c.parent_comment_id,
         (SELECT COUNT(*) FROM Likes l WHERE l.target_type = 'comment' AND l.target_id = c.comment_id) as like_count
        FROM Comment c 
        INNER JOIN Users u ON c.user_id = u.user_id 
@@ -169,18 +169,18 @@ async function addLike(userId, targetType, targetId) {
   }
 }
 
-async function addComment(userId, postId, content) {
+async function addComment(userId, postId, content, parentCommentId = null) {
   const connection = await getConnection();
   try {
     const [result] = await connection.execute(
-      `INSERT INTO Comment (user_id, post_id, content, create_at) 
-       VALUES (?, ?, ?, CURRENT_TIMESTAMP)`,
-      [userId, postId, content]
+      `INSERT INTO Comment (user_id, post_id, content, parent_comment_id, create_at) 
+       VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+      [userId, postId, content, parentCommentId]
     );
     const commentId = result.insertId;
 
     const [rows] = await connection.execute(
-      `SELECT c.comment_id, c.content, c.create_at, c.user_id, u.username,
+      `SELECT c.comment_id, c.content, c.create_at, c.user_id, u.username, c.parent_comment_id,
         (SELECT COUNT(*) FROM Likes l WHERE l.target_type = 'comment' AND l.target_id = c.comment_id) as like_count
        FROM Comment c 
        JOIN Users u ON c.user_id = u.user_id 
@@ -259,7 +259,7 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
-      const { action, userId, postId, commentId, content } = req.body;
+      const { action, userId, postId, commentId, content, parentCommentId } = req.body;
 
       if (action === 'like') {
         if (!userId || (!postId && !commentId)) {
@@ -287,11 +287,19 @@ export default async function handler(req, res) {
           });
         }
 
-        const newComment = await addComment(userId, postId, content);
-        return res.status(200).json({
-          success: true,
-          comment: newComment
-        });
+        // 验证 parentCommentId 是否存在且有效 (可选，可以在前端做初步验证，后端做最终验证)
+        if (parentCommentId) {
+          // 可以在这里查询数据库验证 parentCommentId 是否存在于 comment 表
+          // 为简化起见，这里先不加严格验证，依赖数据库外键约束
+        }
+
+        try {
+          const newComment = await addComment(userId, postId, content, parentCommentId);
+          return res.status(201).json({ success: true, comment: newComment });
+        } catch (error) {
+          console.error('发表评论失败:', error);
+          return res.status(500).json({ success: false, message: '发表评论失败' });
+        }
       }
 
       return res.status(400).json({

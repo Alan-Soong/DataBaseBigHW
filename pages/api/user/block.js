@@ -54,9 +54,14 @@ export default async function handler(req, res) {
           'UPDATE Users SET following_count = GREATEST(0, following_count - 1) WHERE user_id = ?',
           [userId]
        );
-        await connection.execute(
-          'UPDATE Users SET follower_count = GREATEST(0, follower_count - 1) WHERE user_id = ?',
-          [targetUserId]
+       // 更新拉黑数和被拉黑数
+       await connection.execute(
+           'UPDATE Users SET blocker_count = blocker_count + 1 WHERE user_id = ?',
+           [userId]
+       );
+       await connection.execute(
+           'UPDATE Users SET blocked_count = blocked_count + 1 WHERE user_id = ?',
+           [targetUserId]
        );
 
     } else if (action === 'unblock') {
@@ -75,6 +80,16 @@ export default async function handler(req, res) {
       await connection.execute(
         'DELETE FROM BlockRelation WHERE blocker_id = ? AND blocked_id = ?',
         [userId, targetUserId]
+      );
+
+      // 更新拉黑数和被拉黑数
+      await connection.execute(
+          'UPDATE Users SET blocker_count = GREATEST(0, blocker_count - 1) WHERE user_id = ?',
+          [userId]
+      );
+      await connection.execute(
+          'UPDATE Users SET blocked_count = GREATEST(0, blocked_count - 1) WHERE user_id = ?',
+          [targetUserId]
       );
 
       // 取消拉黑不影响关注关系，如果之前关注了，取消拉黑后不会自动恢复关注

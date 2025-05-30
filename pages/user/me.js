@@ -79,6 +79,10 @@ export default function MyProfile() {
     }
   }, [currentUser]); // 依赖 currentUser
 
+  useEffect(() => {
+    console.log('recentPosts state changed:', userProfile?.recent_posts || []);
+  }, [userProfile?.recent_posts]);
+
   // 格式化日期 (从 [id].js 复制过来)
   const formatDate = (dateString) => {
     if (!dateString) return '';
