@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Layout from '../../components/layout';
 import utilStyles from '../../styles/utils.module.css';
+import userModeStyles from '../../styles/user_mode.module.css';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
@@ -31,6 +32,7 @@ export default function PostDetail() {
   const [replyingTo, setReplyingTo] = useState(null);
   const [replyContent, setReplyContent] = useState('');
   const [currentUser, setCurrentUser] = useState(null);
+  const [allCommentsFlat, setAllCommentsFlat] = useState([]); // 新增：存储所有评论的扁平列表
 
   useEffect(() => {
     if (!router.isReady || !id) {
@@ -56,6 +58,7 @@ export default function PostDetail() {
       const data = await res.json();
       if (data.success) {
         setPost(data.post);
+        setAllCommentsFlat(data.comments); // 保存扁平列表
         // 构建评论树
         const commentsMap = {};
         data.comments.forEach(comment => { // 将评论存储在map中方便查找
@@ -63,17 +66,18 @@ export default function PostDetail() {
         });
 
         const rootComments = [];
-        Object.values(commentsMap).forEach(comment => {
+        data.comments.forEach(comment => { // 遍历所有评论，构建树结构
           if (comment.parent_comment_id === null) { // 顶层评论
-            rootComments.push(comment);
-          } else {
+            rootComments.push(commentsMap[comment.comment_id]);
+          } else { // 回复
             const parentComment = commentsMap[comment.parent_comment_id];
             if (parentComment) { // 如果父评论存在
-              parentComment.replies.push(comment);
-            } else { // 父评论不存在（已删除），将当前评论视为顶层评论或特殊标记
-              // 这里可以根据需求处理，例如将孤儿评论作为顶层评论显示，或者添加标记
-              // 为了实现占位，我们可以在渲染时检查parent_comment_id是否存在于commentsMap中
-               rootComments.push(comment); // 将孤儿评论也作为顶层评论处理，前端渲染时会检查父级
+              parentComment.replies.push(commentsMap[comment.comment_id]);
+            } else { // 父评论不存在（已删除），将当前评论标记为孤儿或特殊处理
+               // 为了实现占位，我们可以在渲染时检查parent_comment_id是否存在于allCommentsFlat中
+               // 或者直接将孤儿评论作为顶层评论处理，前端渲染时会检查父级
+               // 这里我们选择在渲染时检查父级是否存在于原始扁平列表中
+               rootComments.push(commentsMap[comment.comment_id]); // 将孤儿评论也作为顶层评论处理
             }
           }
         });
@@ -91,12 +95,14 @@ export default function PostDetail() {
         setPost(null);
         setComments([]);
         setLikeCount(0);
+        setAllCommentsFlat([]);
       }
     } catch (error) {
       console.error('获取帖子详情失败:', error);
       setPost(null);
       setComments([]);
       setLikeCount(0);
+      setAllCommentsFlat([]);
     } finally {
       setLoading(false);
     }
@@ -136,9 +142,9 @@ export default function PostDetail() {
       // 如果有回复，递归查找子树
       if (comment.replies && comment.replies.length > 0) {
         const updatedReplies = addReplyToCommentsTree(comment.replies, parentCommentId, newReply);
+        // 如果子树有更新，返回整个树的副本以触发React更新
         if (updatedReplies !== comment.replies) {
-           // 如果子树有更新，返回整个树
-           return commentsTree;
+           return [...commentsTree];
         }
       }
     }
@@ -173,6 +179,7 @@ export default function PostDetail() {
       const updatedComments = [...comments, result.comment];
       updatedComments.sort((a, b) => new Date(a.create_at) - new Date(b.create_at));
       setComments(updatedComments);
+      setAllCommentsFlat(prev => [...prev, result.comment]); // 更新扁平列表
       setNewComment('');
     } else {
       console.error('发表评论失败:', result.message);
@@ -197,9 +204,13 @@ export default function PostDetail() {
         userId: loginStatus.userId 
       })
     }).then(r => r.json());
+    // 更新评论树和扁平列表的点赞状态
     setComments(comments => comments.map(c =>
-      c.comment_id === commentId ? { ...c, like_count: result.count, liked: result.liked } : c
+      c.comment_id === commentId ? { ...c, like_count: result.count, liked: result.liked } : 
+      { ...c, replies: c.replies.map(r => r.comment_id === commentId ? { ...r, like_count: result.count, liked: result.liked } : r) } // 递归更新回复的点赞状态
     ));
+    setAllCommentsFlat(prev => prev.map(c => c.comment_id === commentId ? { ...c, like_count: result.count, liked: result.liked } : c)); // 更新扁平列表
+
   };
 
   // 处理回复提交
@@ -233,6 +244,7 @@ export default function PostDetail() {
       // 将新回复添加到评论树的正确位置
       const updatedCommentsTree = addReplyToCommentsTree([...comments], parentCommentId, result.comment);
       setComments(updatedCommentsTree);
+      setAllCommentsFlat(prev => [...prev, result.comment]); // 更新扁平列表
       // 清空回复状态
       setReplyingTo(null);
       setReplyContent('');
@@ -242,90 +254,153 @@ export default function PostDetail() {
     }
   };
 
-  // 辅助函数：递归渲染评论和其回复
-  const renderComments = (commentList) => {
+  // 辅助函数：递归渲染评论和其回复，传入层级
+  const renderComments = (commentList, level = 0) => {
     return (
-      <div className={utilStyles.commentList}>
-        {commentList.map(comment => (
-          <div key={comment.comment_id} className={utilStyles.commentItem}>
-            {/* 检查父评论是否存在并渲染占位符 */}
-            {comment.parent_comment_id !== null && !comments.find(c => c.comment_id === comment.parent_comment_id) && (
-                <div className={utilStyles.deletedCommentPlaceholder}>回复一个已删除的评论</div>
-             )}
-            <p>{comment.content}</p>
-            <div className={utilStyles.commentMeta}>
-              <span>作者: {comment.username}</span>
-              <span>发布于: {formatDate(comment.create_at)}</span>
-              <button onClick={() => handleCommentLike(comment.comment_id)} className={`${utilStyles.commentLikeButton} ${comment.liked ? utilStyles.likedButton : ''}`} title={comment.liked ? '已点赞评论' : '点赞评论'}>
-                {comment.liked ? '👍' : '👍🏻'} {comment.like_count || 0}
-              </button>
-              <button onClick={() => setReplyingTo(comment.comment_id)} className={utilStyles.replyButton}>回复</button>
-            </div>
+      <div className={level === 0 ? userModeStyles.commentList : userModeStyles.repliesList}> 
+        {commentList.map(comment => {
+          // 检查父评论是否存在于所有评论的扁平列表中
+          const parentExists = comment.parent_comment_id === null || allCommentsFlat.some(c => c.comment_id === comment.parent_comment_id);
+          
+          // 查找父评论以便获取用户名
+          const parentComment = comment.parent_comment_id ? allCommentsFlat.find(c => c.comment_id === comment.parent_comment_id) : null;
 
-            {/* 如果正在回复当前评论，显示回复输入框 */}
-            {replyingTo === comment.comment_id && (
-                 <div className={utilStyles.replyForm}>
-                    <textarea
-                      value={replyContent}
-                      onChange={(e) => setReplyContent(e.target.value)}
-                      placeholder={`回复 @${comment.username}: `}
-                    />
-                    <button onClick={() => handleReplySubmit(comment.comment_id)}>提交回复</button>
-                    <button onClick={() => setReplyingTo(null)}>取消</button>
-                 </div>
-            )}
-
-            {comment.replies && comment.replies.length > 0 && (
-              <div className={utilStyles.replies}>
-                {renderComments(comment.replies)}
+          return (
+            <div key={comment.comment_id} className={`${userModeStyles.commentItem} ${level > 0 ? userModeStyles.replyItem : ''} ${level > 1 ? userModeStyles.nestedReplyItem : ''}`}> {/* 应用不同层级的样式 */}
+              {/* 仅当父评论不存在且当前评论有父评论ID时显示占位符 */}
+              {comment.parent_comment_id !== null && !parentExists && (
+                  <div className={utilStyles.deletedCommentPlaceholder}>回复一个已删除的评论</div>
+               )}
+              <h4>{comment.username}</h4>
+              <p className={userModeStyles.commentContent}>
+                {/* 如果是二级或更深回复，显示回复对象 */}
+                {level > 0 && parentComment && 
+                 <span className={userModeStyles.replyTo}>回复 {parentComment.username}: </span>
+                }
+                {comment.content}
+              </p>
+              <div className={userModeStyles.commentMeta}>
+                <span>发布于: {formatDate(comment.create_at)}</span>
+                <button onClick={() => handleCommentLike(comment.comment_id)} className={userModeStyles.likeButton}>
+                  {/* 这里需要根据后端返回的点赞状态来判断显示"赞"还是"取消赞"，目前只显示点赞数 */}
+                  赞 ({comment.like_count || 0})
+                </button>
+                {/* 点击回复按钮时切换 replyingTo 状态 */}
+                <button onClick={() => setReplyingTo(replyingTo === comment.comment_id ? null : comment.comment_id)} className={userModeStyles.replyButton}>
+                  {replyingTo === comment.comment_id ? '取消回复' : '回复'}
+                </button>
               </div>
-            )}
-          </div>
-        ))}
+
+              {/* 回复输入框 */}
+              {replyingTo === comment.comment_id && (
+                   <div className={userModeStyles.replyInputArea}>
+                      <textarea
+                         value={replyContent} 
+                         onChange={(e) => setReplyContent(e.target.value)}
+                         placeholder={`回复 ${comment.username}...`}
+                         className={userModeStyles.commentInput}
+                      />
+                      <button onClick={() => handleReplySubmit(comment.comment_id)} className={userModeStyles.commentButton}> 
+                         提交回复
+                      </button>
+                   </div>
+              )}
+
+              {/* 递归渲染回复，层级加1 */}
+              {comment.replies && comment.replies.length > 0 && (
+                <div className={userModeStyles.repliesList}> 
+                  {renderComments(comment.replies, level + 1)}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     );
   };
 
-  if (!post) return <Layout><p className={utilStyles.loading}>加载中...</p></Layout>;
+  if (loading) {
+    return <Layout><p className={utilStyles.loading}>加载中...</p></Layout>;
+  }
+
+  if (!post) {
+    return <Layout><p className={utilStyles.loading}>加载中...</p></Layout>;
+  }
 
   return (
     <Layout>
-      <Head><title>{post.title}</title></Head>
-      <div className={utilStyles.postCard}>
-        <h1 className={utilStyles.postCardTitle}>{post.title}</h1>
-        <p className={utilStyles.postMeta}>作者: {post.username} | 发布时间: {formatDate(post.post_time)}</p>
-        <p className={utilStyles.postContent}>{post.content}</p>
-        <div className={utilStyles.postActions}>
-          <button 
-            onClick={handleLike} 
-            className={`${utilStyles.likeButton} ${liked ? utilStyles.likedButton : ''}`}
-            title={liked ? '已点赞' : '点赞'}
-          >
-            {liked ? '👍' : '👍🏻'} {likeCount}
-          </button>
-        </div>
+      <Head>
+        <title>{post?.title ? `${post.title} - 帖子详情` : '帖子详情'}</title>
+      </Head>
+
+      {/* 使用userModeStyles.container和.variableContainer作为主容器 */}
+      <div className={`${userModeStyles.container} ${userModeStyles.variableContainer}`}> 
+        <main className={userModeStyles.mainContent}> {/* 应用userModeStyles.mainContent */}
+
+          {/* 帖子主体 */}
+          <div className={userModeStyles.postCard}> {/* Apply userModeStyles for post card appearance */}
+            <div className={userModeStyles.postHeader}> {/* Apply userModeStyles for post header */}
+              <h1 className={userModeStyles.postTitle}> {/* Apply userModeStyles for post title */}
+                {post.title}
+              </h1>
+              <div className={userModeStyles.postMeta}> {/* Apply userModeStyles for post meta */}
+                <span>作者: {post.username}</span>
+                <span>频道: {post.section_name || '未分类'}</span>
+              </div>
+              <div className={userModeStyles.postMeta}> {/* Separate div for time and comments to match image */}
+                 <span>发布于: {formatDate(post.post_time)}</span>
+                 <span>评论: {comments.length}</span>
+              </div>
+            </div>
+            <div className={userModeStyles.postContent}> {/* Apply userModeStyles for post content */}
+              {post.content}
+            </div>
+             <div className={userModeStyles.postActions}> {/* Apply userModeStyles for post actions */}
+               {/* 点赞按钮 */}
+               <button onClick={handleLike} className={userModeStyles.likeButton}> {/* Apply userModeStyles for like button */}
+                  {liked ? '取消赞' : '赞'} ({likeCount})
+               </button>
+               {/* 查看评论按钮 */}
+               {/* 图片中的"查看评论"看起来像一个文字链接，我们使用一个样式类似的按钮 */}
+               <button className={userModeStyles.replyButton}>查看评论 ({comments.length})</button>
+               {/* 删除帖子按钮，仅作者可见 */}
+               {currentUser && currentUser.user_id === post?.user_id && (
+                 <button className={userModeStyles.deleteButton}>删除帖子</button>
+               )}
+             </div>
+          </div>
+
+          {/* 评论区 */}
+          <div className={userModeStyles.commentSection}> {/* Apply userModeStyles for comment section */}
+            <div className={userModeStyles.commentInputArea}> {/* Apply userModeStyles for comment input area */}
+              <textarea
+                value={newComment} // Corrected: Use newComment for the main comment input
+                onChange={(e) => setNewComment(e.target.value)} // Corrected: Use setNewComment
+                placeholder="发表你的评论..."
+                className={userModeStyles.commentInput}
+              />
+              <button onClick={handleComment} className={userModeStyles.commentButton}> {/* Corrected: Call handleComment for top-level comments */}
+                发表评论
+              </button>
+            </div>
+
+            <h3 className={userModeStyles.commentsTitle}>评论 ({comments.length})</h3>
+            {loading ? (
+              <p className={utilStyles.loading}>加载评论中...</p>
+            ) : comments.length > 0 ? (
+              renderComments(comments) 
+            ) : (
+              <div className={userModeStyles.emptyState}>
+                <p>暂无评论。</p>
+              </div>
+            )}
+
+          </div>
+
+        </main>
       </div>
 
-      <div className={utilStyles.commentsSection}>
-        <h2>评论</h2>
-        <div className={utilStyles.commentForm}>
-          <textarea
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            placeholder="输入评论..."
-          />
-          <button onClick={handleComment}>发表评论</button>
-        </div>
-
-        <section className={utilStyles.sectionLg}>
-          <h2 className={utilStyles.headingLg}>评论 ({comments.length})</h2>
-          {comments && comments.length > 0 ? (
-            renderComments(comments)
-          ) : (
-            <p>暂无评论。</p>
-          )}
-        </section>
-      </div>
+      {/* 可能的Toast或其他全局组件 */}
     </Layout>
   );
 }

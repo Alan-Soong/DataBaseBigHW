@@ -1,33 +1,42 @@
 // components/ListModal.js
-import React from 'react';
-import Link from 'next/link';
-import utilStyles from '../styles/utils.module.css'; // 引入样式
+import { useState } from 'react';
+import styles from '../styles/list_modal.module.css';
 
-const ListModal = ({ isOpen, onClose, title, data }) => {
+export default function ListModal({ isOpen, onClose, title, data, onUserClick }) {
   if (!isOpen) return null;
 
   return (
-    <div className={utilStyles.listModalOverlay}>
-      <div className={utilStyles.listModalContent}>
-        <h2 className={utilStyles.listModalTitle}>{title}</h2>
-        {data && data.length > 0 ? (
-          <ul className={utilStyles.modalList}>
-            {data.map(item => (
-              <li key={item.user_id} className={utilStyles.modalListItem}>
-                 {/* 链接到用户主页 */}
-                <Link href={`/user/${item.user_id}`}>
-                   {item.username}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p>暂无用户。</p>
-        )}
-        <button onClick={onClose} className={utilStyles.listModalCloseButton}>关闭</button>
+    <div className={styles.modalOverlay}>
+      <div className={styles.modalContent}>
+        <div className={styles.modalHeader}>
+          <h2>{title}</h2>
+          <button onClick={onClose} className={styles.closeButton}>×</button>
+        </div>
+        <div className={styles.modalBody}>
+          {data && data.length > 0 ? (
+            <ul className={styles.userList}>
+              {data.map(user => (
+                <li key={user.user_id} className={styles.userItem}>
+                  <div className={styles.userInfo}>
+                    <span className={styles.username}>{user.username}</span>
+                    <span className={styles.level}>等级: {user.level}</span>
+                  </div>
+                  {onUserClick && (
+                    <button 
+                      onClick={() => onUserClick(user)}
+                      className={styles.viewProfileButton}
+                    >
+                      查看主页
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className={styles.emptyState}>暂无数据</div>
+          )}
+        </div>
       </div>
     </div>
   );
-};
-
-export default ListModal; 
+} 

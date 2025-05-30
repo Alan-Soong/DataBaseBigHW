@@ -1,28 +1,43 @@
-import { query } from '../db'; // 假设您的数据库查询函数在这里
-import { auth } from '../auth/session'; // 假设您的认证中间件在这里
+import { getConnection } from '../db';
 
-export default auth(async (req, res) => {
+export default async function handler(req, res) {
   if (req.method !== 'GET') {
-    return res.status(405).json({ message: 'Method Not Allowed' });
+    res.setHeader('Allow', ['GET']);
+    return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 
-  const { userId } = req.query; // 获取要查询的用户的ID
+  const { userId } = req.query;
 
   if (!userId) {
-    return res.status(400).json({ message: 'User ID is required' });
+    return res.status(400).json({
+      success: false,
+      message: '缺少用户ID参数'
+    });
   }
 
   try {
-    // 查询数据库获取该用户的粉丝列表
-    // 假设有一个 follows 表，结构为 follower_id, following_id
-    const result = await query(
-      `SELECT u.user_id, u.username FROM follows f JOIN users u ON f.follower_id = u.user_id WHERE f.following_id = ?`,
+    const connection = await getConnection();
+
+    // 获取用户的粉丝列表
+    const [followers] = await connection.execute(
+      `SELECT u.user_id, u.username, u.level
+       FROM Users u
+       INNER JOIN followrelation f ON u.user_id = f.follower_id
+       WHERE f.followed_id = ?`,
       [userId]
     );
 
-    res.status(200).json({ success: true, followers: result });
+    await connection.end();
+
+    return res.status(200).json({
+      success: true,
+      followers
+    });
   } catch (error) {
-    console.error('Error fetching followers list:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch followers list' });
+    console.error('获取粉丝列表失败:', error);
+    return res.status(500).json({
+      success: false,
+      message: '获取粉丝列表失败'
+    });
   }
-}); 
+} 

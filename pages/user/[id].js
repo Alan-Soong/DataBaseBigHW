@@ -6,6 +6,7 @@ import userModeStyles from '../../styles/user_mode.module.css';
 import Link from 'next/link';
 import Head from 'next/head';
 import ListModal from '../../components/ListModal';
+import VisibilitySettingsModal from '../../components/VisibilitySettingsModal';
 
 export default function UserProfile() {
   const router = useRouter();
@@ -26,6 +27,21 @@ export default function UserProfile() {
   const [showListModal, setShowListModal] = useState(false);
   const [listModalTitle, setListModalTitle] = useState('');
   const [listModalData, setListModalData] = useState([]);
+
+  // 可见性字段定义，根据需要添加更多字段 (从 settings.js 迁移过来)
+  const visibilityFields = [
+    { name: 'profileBase', label: '基本信息 (头像, 用户名)' },
+    { name: 'level', label: '等级' },
+    { name: 'experience', label: '经验值' },
+    { name: 'major', label: '专业' },
+    { name: 'studentId', label: '学号' },
+    { name: 'registrationDate', label: '注册时间' },
+    { name: 'stats', label: '统计数据 (发帖, 评论, 获赞)' },
+    { name: 'recent_posts', label: '最近发帖' },
+    { name: 'following_list', label: '关注列表' },
+    { name: 'followers_list', label: '粉丝列表' },
+    { name: 'blocked_list', label: '拉黑列表' }, // 拉黑列表通常只有自己可见，但仍可提供设置选项
+  ];
 
   // 获取当前登录用户信息
   useEffect(() => {
@@ -65,7 +81,6 @@ export default function UserProfile() {
 
       try {
         setLoading(true);
-        // 将当前登录用户的ID作为 viewerId 传递给后端
         const viewerIdParam = currentUser ? `&viewerId=${currentUser.user_id}` : '';
         const res = await fetch(`/api/userProfile?userId=${id}${viewerIdParam}`);
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
@@ -74,14 +89,15 @@ export default function UserProfile() {
         if (data.success) {
           setUserProfile(data.user);
           console.log('User Profile:', data.user);
-          // 根据后端返回的数据更新关注和拉黑状态
+
           if (data.user) {
              setIsFollowing(data.user.isFollowing || false);
              setIsBlocked(data.user.isBlocked || false);
           }
-           // 如果是自己的主页，获取可见性设置
-           if (currentUser && currentUser.user_id === parseInt(id)) {
-               fetchVisibilitySettings(currentUser.user_id);
+
+          // 如果是自己的主页，获取可见性设置
+          if (currentUser && currentUser.user_id === parseInt(id)) {
+               fetchVisibilitySettings(currentUser.user_id); // Call the function to fetch settings
            }
 
         } else {
@@ -98,13 +114,12 @@ export default function UserProfile() {
       }
     };
 
-    // 当id或当前用户变化时重新获取用户资料
     if (id) {
       fetchUserProfile();
     }
   }, [id, currentUser]);
 
-  // 获取可见性设置
+  // 获取可见性设置 (从 settings.js 迁移过来)
   const fetchVisibilitySettings = async (userId) => {
     try {
       const res = await fetch(`/api/profileVisibility?userId=${userId}`);
@@ -112,21 +127,28 @@ export default function UserProfile() {
 
       const data = await res.json();
       if (data.success) {
-        // 将设置转换为更易于使用的格式
         const settings = {};
-        data.settings.forEach(setting => {
-          settings[setting.field_name] = {
-            visibleToAdminOnly: setting.visible_to_admin_only === 1,
-            visibleToFollowersOnly: setting.visible_to_followers_only === 1,
-            visibleToAll: setting.visible_to_all === 1
-          };
+        // Initialize all fields' settings, default to visible to all if not returned
+        visibilityFields.forEach(field => {
+            const userSetting = data.settings.find(s => s.field_name === field.name);
+            settings[field.name] = userSetting ? {
+                visibleToAdminOnly: userSetting.visible_to_admin_only === 1,
+                visibleToFollowersOnly: userSetting.visible_to_followers_only === 1,
+                visibleToAll: userSetting.visible_to_all === 1
+            } : { // Default to visible to all if no setting found
+                 visibleToAdminOnly: false,
+                 visibleToFollowersOnly: false,
+                 visibleToAll: true
+            };
         });
         setVisibilitySettings(settings);
       } else {
         console.error('获取可见性设置失败:', data.message);
+        // Optionally show toast or set default settings on failure
       }
     } catch (error) {
       console.error('获取可见性设置失败:', error);
+      // Optionally show toast or set default settings on failure
     }
   };
 
@@ -260,8 +282,8 @@ export default function UserProfile() {
       return true;
     }
 
-    // 如果没有设置，默认显示
-    if (!visibilitySettings[fieldName]) {
+    // 如果没有获取到可见性设置，或者该字段没有设置，默认显示
+    if (!visibilitySettings || !visibilitySettings[fieldName]) {
       return true;
     }
 
@@ -278,7 +300,6 @@ export default function UserProfile() {
     }
 
     // 如果设置为仅对关注者可见，且当前用户已关注
-    // 注意：这里的 isFollowing 状态反映的是viewerId对userProfile.user_id的关注状态
     if (setting.visibleToFollowersOnly && isFollowing) {
       return true;
     }
@@ -338,17 +359,25 @@ export default function UserProfile() {
         const data = await res.json();
         if (data.isLoggedIn && data.userId) {
           setViewerId(data.userId);
+           // Also fetch the full user object to get is_admin if needed for visibility
+           const profileRes = await fetch(`/api/userProfile?userId=${data.userId}`);
+           const profileData = await profileRes.json();
+           if (profileData.success) {
+               setCurrentUser(profileData.user); // Set the full user object
+           }
         } else {
           setViewerId(null);
+          setCurrentUser(null);
         }
       } catch (error) {
         console.error('获取查看者信息失败:', error);
         setViewerId(null);
+        setCurrentUser(null);
       }
     };
 
     fetchViewer();
-  }, []); // 只在组件加载时运行
+  }, []); // Run only on component mount
 
   const showToast = (message) => {
     setToast({ show: true, message });
@@ -383,7 +412,7 @@ export default function UserProfile() {
   // 处理查看粉丝列表
   const handleViewFollowers = async () => {
     if (!userProfile || !userProfile.user_id) return;
-     try {
+    try {
       const res = await fetch(`/api/user/getFollowers?userId=${userProfile.user_id}`);
       const data = await res.json();
       if (data.success) {
@@ -401,13 +430,12 @@ export default function UserProfile() {
 
   // 处理查看拉黑列表
   const handleViewBlocks = async () => {
-    if (!currentUser || !isOwnProfile) { // 只有当前用户查看自己的主页时才能查看拉黑列表
+    if (!currentUser || !isOwnProfile) {
       showToast('无权查看拉黑列表');
       return;
     }
     try {
-      // 拉黑列表API不需要targetUserId，它基于当前登录用户
-      const res = await fetch('/api/user/getBlocks'); 
+      const res = await fetch(`/api/user/getBlocks?userId=${currentUser.user_id}`);
       const data = await res.json();
       if (data.success) {
         setListModalTitle('拉黑列表');
@@ -422,11 +450,68 @@ export default function UserProfile() {
     }
   };
 
+  // 处理用户点击
+  const handleUserClick = (user) => {
+    router.push(`/user/${user.user_id}`);
+    setShowListModal(false);
+  };
+
+  // 处理保存可见性设置 (从 settings.js 迁移过来)
+  const handleSaveVisibilitySettings = async (settingsToSave) => {
+    if (!currentUser) return false; // Return false on failure
+
+    let success = true; // Track if all saves were successful
+
+    for (const fieldName of Object.keys(settingsToSave)) {
+      const setting = settingsToSave[fieldName];
+      const settingData = {
+        userId: currentUser.user_id,
+        fieldName: fieldName,
+        visibleToAdminOnly: setting.visibleToAdminOnly ? 1 : 0,
+        visibleToFollowersOnly: setting.visibleToFollowersOnly ? 1 : 0,
+        visibleToAll: setting.visibleToAll ? 1 : 0,
+      };
+
+      try {
+        const res = await fetch('/api/profileVisibility', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(settingData),
+        });
+
+        const data = await res.json();
+        if (!data.success) {
+          console.error(`Failed to save setting for ${fieldName}:`, data.message);
+           // Use fieldName to find corresponding label for better error message
+          const field = visibilityFields.find(f => f.name === fieldName);
+          showToast(`保存 ${field ? field.label : fieldName} 失败: ${data.message}`);
+          success = false; // Mark as failed
+        }
+      } catch (error) {
+        console.error(`Error saving setting for ${fieldName}:`, error);
+         // Use fieldName to find corresponding label for better error message
+        const field = visibilityFields.find(f => f.name === fieldName);
+        showToast(`保存 ${field ? field.label : fieldName} 失败，请稍后重试`);
+        success = false; // Mark as failed
+      }
+    }
+
+    if (success) {
+      showToast('设置保存成功！');
+      // Update local state with newly saved settings if needed, or re-fetch
+      // For simplicity, we can just re-fetch settings after successful save
+      fetchVisibilitySettings(currentUser.user_id);
+      return true; // Indicate success
+    } else {
+        return false; // Indicate failure
+    }
+  };
+
   if (loading) {
     return (
       <Layout>
-        <div className={`${userModeStyles.container} ${userModeStyles.variableContainer}`}> {/* 应用容器和变量类 */}
-          <div className={userModeStyles.loading}>加载中...</div> {/* 应用加载样式 */}
+        <div className={`${userModeStyles.container} ${userModeStyles.variableContainer}`}> {/* Applied container and variable classes */}
+          <div className={userModeStyles.loading}>加载中...</div> {/* Applied loading style */}
         </div>
       </Layout>
     );
@@ -435,8 +520,8 @@ export default function UserProfile() {
   if (!userProfile) {
     return (
        <Layout>
-        <div className={`${userModeStyles.container} ${userModeStyles.variableContainer}`}> {/* 应用容器和变量类 */}
-          <div className={userModeStyles.emptyState}> {/* 应用空状态样式 */}
+        <div className={`${userModeStyles.container} ${userModeStyles.variableContainer}`}> {/* Applied container and variable classes */}
+          <div className={userModeStyles.emptyState}> {/* Applied empty state style */}
             <p>无法加载用户资料或用户不存在。</p>
           </div>
         </div>
@@ -450,51 +535,51 @@ export default function UserProfile() {
         <title>{userProfile.username} 的个人主页</title>
       </Head>
 
-      {/* 应用 userModeStyles.container 和 .variableContainer 作为主容器 */}
+      {/* Applied userModeStyles.container and .variableContainer as main container */}
       <div className={`${userModeStyles.container} ${userModeStyles.variableContainer}`}> 
 
-        {/* 主要内容区域 */}
-        <main className={userModeStyles.mainContent}> {/* 应用 userModeStyles.mainContent */} 
+        {/* Main content area */}
+        <main className={userModeStyles.mainContent}> {/* Applied userModeStyles.mainContent */} 
 
-          {/* 个人主页主要内容布局容器 */} 
-          <div className={userModeStyles.profileContent}> {/* 应用 userModeStyles.profileContent */}
+          {/* Profile main content layout container */} 
+          <div className={userModeStyles.profileContent}> {/* Applied userModeStyles.profileContent */}
 
-            {/* 用户信息、统计和操作区（左侧或顶部堆叠）*/} 
-            <div className={userModeStyles.profileSection}> {/* 应用 userModeStyles.profileSection */}
+            {/* User info, stats, and actions area (left or stacked on top) */} 
+            <div className={userModeStyles.profileSection}> {/* Applied userModeStyles.profileSection */}
 
-              {/* 用户基础信息 */} 
+              {/* User base info */} 
               {shouldShowField('profileBase') && (
-                 <div className={userModeStyles.profileBase}> {/* 应用 userModeStyles.profileBase */}
-                   <div className={userModeStyles.profileAvatar}> {/* 应用 userModeStyles.profileAvatar */}
+                 <div className={userModeStyles.profileBase}> {/* Applied userModeStyles.profileBase */}
+                   <div className={userModeStyles.profileAvatar}> {/* Applied userModeStyles.profileAvatar */}
                      {userProfile.username?.charAt(0)}
                    </div>
-                   <div className={userModeStyles.profileInfo}> {/* 应用 userModeStyles.profileInfo */}
-                     <h1 className={userModeStyles.userName}> {/* 应用 userModeStyles.userName */}
+                   <div className={userModeStyles.profileInfo}> {/* Applied userModeStyles.profileInfo */}
+                     <h1 className={userModeStyles.userName}> {/* Applied userModeStyles.userName */}
                        {userProfile.username}
                      </h1>
-                     {/* 其他基础信息 */} 
+                     {/* Other base info */} 
                      {shouldShowField('level') && (
-                        <div className={userModeStyles.infoBlock}> {/* 应用 userModeStyles.infoBlock */}
+                        <div className={userModeStyles.infoBlock}> {/* Applied userModeStyles.infoBlock */}
                          等级：{userProfile.level_name}（{userProfile.level}）
                        </div>
                      )}
                       {shouldShowField('experience') && (
-                       <div className={userModeStyles.infoBlock}> {/* 应用 userModeStyles.infoBlock */}
+                       <div className={userModeStyles.infoBlock}> {/* Applied userModeStyles.infoBlock */}
                          经验值：{userProfile.experience}
                        </div>
                       )}
                      {shouldShowField('major') && (
-                        <div className={userModeStyles.infoBlock}> {/* 应用 userModeStyles.infoBlock */}
+                        <div className={userModeStyles.infoBlock}> {/* Applied userModeStyles.infoBlock */}
                          专业：{userProfile.major || '未填写'}
                        </div>
                      )}
                       {shouldShowField('studentId') && (
-                        <div className={userModeStyles.infoBlock}> {/* 应用 userModeStyles.infoBlock */}
+                        <div className={userModeStyles.infoBlock}> {/* Applied userModeStyles.infoBlock */}
                           学号: {userProfile.student_id}
                        </div>
                       )}
                        {shouldShowField('registrationDate') && (
-                        <div className={userModeStyles.infoBlock}> {/* 应用 userModeStyles.infoBlock */}
+                        <div className={userModeStyles.infoBlock}> {/* Applied userModeStyles.infoBlock */}
                           注册时间: {formatDate(userProfile.registration_date)}
                        </div>
                       )}
@@ -503,55 +588,66 @@ export default function UserProfile() {
                  </div>
               )}
 
-              {/* 用户统计信息 */} 
+              {/* User stats info */} 
               {shouldShowField('stats') && (
-                 <div className={userModeStyles.profileStats}> {/* 应用 userModeStyles.profileStats */}
-                   <div className={userModeStyles.statBlock}> {/* 应用 userModeStyles.statBlock */}
+                 <div className={userModeStyles.profileStats}> {/* Applied userModeStyles.profileStats */}
+                   <div className={userModeStyles.statBlock}> {/* Applied userModeStyles.statBlock */}
                      发帖数：{userProfile.post_count}
                    </div>
-                   <div className={userModeStyles.statBlock}> {/* 应用 userModeStyles.statBlock */}
+                   <div className={userModeStyles.statBlock}> {/* Applied userModeStyles.statBlock */}
                      评论数：{userProfile.comment_count}
                    </div>
-                   <div className={userModeStyles.statBlock}> {/* 应用 userModeStyles.statBlock */}
+                   <div className={userModeStyles.statBlock}> {/* Applied userModeStyles.statBlock */}
                      获赞数：{userProfile.like_count}
                    </div>
-                   <div className={userModeStyles.statBlock}> {/* 应用 userModeStyles.statBlock */}
-                     关注：{userProfile.following_count}
-                   </div>
-                   <div className={userModeStyles.statBlock}> {/* 应用 userModeStyles.statBlock */}
-                     粉丝：{userProfile.follower_count}
-                   </div>
+                   {/* Display follow and follower counts directly in stats area, not as buttons */} 
+                   {shouldShowField('following_count') && (
+                      <div className={userModeStyles.statBlock}> {/* Applied userModeStyles.statBlock */}
+                        关注：{userProfile.following_count}
+                      </div>
+                   )}
+                   {shouldShowField('follower_count') && (
+                      <div className={userModeStyles.statBlock}> {/* Applied userModeStyles.statBlock */}
+                        粉丝：{userProfile.follower_count}
+                      </div>
+                   )}
                  </div>
               )}
 
-              {/* 新增的列表按钮容器 */}
-              <div className={utilStyles.profileActions}> {/* 可以复用或新增一个样式类 */}
+              {/* 新增的列表按钮容器 - 移到统计信息下方并应用新样式 */}
+              <div className={userModeStyles.profileActions}> {/* Can reuse or add a new style class */}
                  {/* 查看关注列表按钮 */}
-                 <button className={utilStyles.secondaryButton} onClick={handleViewFollowing}>查看关注 ({userProfile?.following_count || 0})</button>
+                 {/* Apply new listViewButton style */}
+                 {shouldShowField('following_list') && (
+                    <button className={userModeStyles.listViewButton} onClick={handleViewFollowing}>查看关注 ({userProfile?.following_count || 0})</button>
+                 )}
                  {/* 查看粉丝列表按钮 */}
-                 <button className={utilStyles.secondaryButton} onClick={handleViewFollowers}>查看粉丝 ({userProfile?.follower_count || 0})</button>
+                 {/* Apply new listViewButton style */}
+                  {shouldShowField('followers_list') && (
+                    <button className={userModeStyles.listViewButton} onClick={handleViewFollowers}>查看粉丝 ({userProfile?.follower_count || 0})</button>
+                  )}
                  {/* 查看拉黑列表按钮 (仅对自己可见) */}
-                 {isOwnProfile && (
-                    <button className={utilStyles.secondaryButton} onClick={handleViewBlocks}>查看拉黑列表</button>
+                 {isOwnProfile && shouldShowField('blocked_list') && (
+                    <button className={userModeStyles.listViewButton} onClick={handleViewBlocks}>查看拉黑列表</button>
                  )}
               </div>
 
-              {/* 关注和拉黑按钮 */} 
+              {/* Follow and Block buttons */} 
               {viewerId && viewerId !== userProfile.user_id && (
-                <div className={userModeStyles.profileActions}> {/* 应用 userModeStyles.profileActions */}
-                  <button onClick={handleFollow} disabled={actionLoading || !currentUser} className={`${userModeStyles.followButton} ${isFollowing ? userModeStyles.following : ''}`}> {/* 应用关注按钮样式 */}
+                <div className={userModeStyles.profileActions}> {/* Applied userModeStyles.profileActions */}
+                  <button onClick={handleFollow} disabled={actionLoading || !currentUser} className={`${userModeStyles.followButton} ${isFollowing ? userModeStyles.following : ''}`}> {/* Apply follow button style */}
                     {actionLoading ? '处理中...' : (isFollowing ? '已关注' : '关注')}
                   </button>
-                  <button onClick={handleBlock} disabled={actionLoading || !currentUser} className={`${userModeStyles.blockButton} ${isBlocked ? userModeStyles.blocked : ''}`}> {/* 应用拉黑按钮样式 */}
+                  <button onClick={handleBlock} disabled={actionLoading || !currentUser} className={`${userModeStyles.blockButton} ${isBlocked ? userModeStyles.blocked : ''}`}> {/* Apply block button style */}
                     {actionLoading ? '处理中...' : (isBlocked ? '已拉黑' : '拉黑')}
                   </button>
                 </div>
               )}
 
-               {/* 可见性设置按钮 (仅在自己的主页显示) */} 
+               {/* 可见性设置按钮 (仅在自己的主页显示) - Modified to open modal */}
               {isOwnProfile && (
-                  <div className={userModeStyles.profileActions}> {/* 可以重用profileActions样式或定义新的 */} 
-                      <button onClick={() => router.push('/user/settings')} className={userModeStyles.submitButton}> {/* 使用一个通用按钮样式或定义新的 */} 
+                  <div className={userModeStyles.profileActions}> {/* Can reuse profileActions style or define new */}
+                      <button onClick={() => setShowVisibilityModal(true)} className={userModeStyles.listViewButton}> {/* Use listViewButton style */}
                           可见性设置
                       </button>
                   </div>
@@ -559,85 +655,87 @@ export default function UserProfile() {
 
             </div>
 
-            {/* 最近发帖区（右侧或底部堆叠） */} 
-            <div className={userModeStyles.profileRecentPosts}> {/* 应用 userModeStyles.profileRecentPosts */}
-              <h2 className={userModeStyles.profileRecentPostsTitle}>最近发布的帖子</h2> {/* 应用 userModeStyles.profileRecentPostsTitle */}
-              {userProfile.recent_posts && userProfile.recent_posts.length > 0 ? (
-                <div className={userModeStyles.postList}> {/* 应用 userModeStyles.postList */} 
-                  {userProfile.recent_posts.map(post => (
-                     <div key={post.post_id} className={userModeStyles.postCard}> {/* 应用 userModeStyles.postCard */}
-                        <div className={userModeStyles.postHeader}> {/* 应用 userModeStyles.postHeader */}
-                          <h3 className={userModeStyles.postCardTitle}> {/* 应用 userModeStyles.postCardTitle */}
-                             <Link href={{ pathname: '/posts/[id]', query: { id: post.post_id } }}>
-                               {post.title}
-                             </Link>
-                          </h3>
-                          <div className={userModeStyles.postMeta}> {/* 应用 userModeStyles.postMeta */}
-                            <span>频道: {post.section_name || '未分类'}</span>
-                            <span>发布于: {formatDate(post.post_time)}</span>
-                            <span>评论: {post.comment_count || 0}</span>
-                            <span>点赞: {post.like_count || 0}</span>
-                             {/* 删除按钮 */} 
-                             {isOwnProfile && ( // 仅在查看自己的主页时显示删除按钮
-                                <button
-                                  onClick={(e) => {
-                                    e.preventDefault(); // 阻止Link的默认跳转
-                                    handleDeletePost(post.post_id);
-                                  }}
-                                  className={userModeStyles.deleteButton} /* 应用 userModeStyles.deleteButton */
-                                  title="删除帖子"
-                                >
-                                  删除
-                                </button>
-                              )}
+            {/* Recent posts area (right or stacked at bottom) */} 
+            {shouldShowField('recent_posts') && (
+              <div className={userModeStyles.profileRecentPosts}> {/* Applied userModeStyles.profileRecentPosts */}
+                <h2 className={userModeStyles.profileRecentPostsTitle}>最近发布的帖子</h2> {/* Applied userModeStyles.profileRecentPostsTitle */}
+                {userProfile.recent_posts && userProfile.recent_posts.length > 0 ? (
+                  <div className={userModeStyles.postList}> {/* Applied userModeStyles.postList */}
+                    {userProfile.recent_posts.map(post => (
+                       <div key={post.post_id} className={userModeStyles.postCard}> {/* Applied userModeStyles.postCard */}
+                          <div className={userModeStyles.postHeader}> {/* Applied userModeStyles.postHeader */}
+                            <h3 className={userModeStyles.postCardTitle}> {/* Applied userModeStyles.postCardTitle */}
+                               <Link href={{ pathname: '/posts/[id]', query: { id: post.post_id } }}>
+                                 {post.title}
+                               </Link>
+                            </h3>
+                            <div className={userModeStyles.postMeta}> {/* Applied userModeStyles.postMeta */}
+                              <span>频道: {post.section_name || '未分类'}</span>
+                              <span>发布于: {formatDate(post.post_time)}</span>
+                              <span>评论: {post.comment_count || 0}</span>
+                              <span>点赞: {post.like_count || 0}</span>
+                               {/* Delete button */}
+                               {isOwnProfile && ( // Only show delete button when viewing own profile
+                                  <button
+                                    onClick={(e) => {
+                                      e.preventDefault(); // Prevent default Link behavior
+                                      handleDeletePost(post.post_id);
+                                    }}
+                                    className={userModeStyles.deleteButton} /* Applied userModeStyles.deleteButton */
+                                    title="删除帖子"
+                                  >
+                                    删除
+                                  </button>
+                                )}
+                            </div>
                           </div>
-                        </div>
-                         <div className={userModeStyles.postContent}> {/* 应用 userModeStyles.postContent */}
-                           {post.content && post.content.length > 150 ? `${post.content.substring(0, 150)}...` : post.content}
-                         </div>
-                     </div>
-                  ))}
-                </div>
-              ) : ( 
-                 <div className={userModeStyles.emptyState}> {/* 应用 userModeStyles.emptyState */}
-                  <p>暂无发布的帖子。</p>
-                 </div>
-              )}
-            </div>
+                           <div className={userModeStyles.postContent}> {/* Applied userModeStyles.postContent */}
+                             {post.content && post.content.length > 150 ? `${post.content.substring(0, 150)}...` : post.content}
+                           </div>
+                       </div>
+                    ))}
+                  </div>
+                ) : ( /* Else part for recent_posts list */
+                   <div className={userModeStyles.emptyState}> {/* Applied userModeStyles.emptyState */} 
+                    <p>暂无发布的帖子。</p>
+                   </div>
+                )} {/* Closing ternary for recent_posts list */}
+              </div>
+            )} {/* Closing conditional rendering for recent_posts area */}
 
-          </div>
-        </main>
-      </div>
+          </div> {/* Closing div for profileContent */}
+        </main> {/* Closing main tag */}
+      </div> {/* Closing div for container */}
 
-      {/* 提示信息 */} 
+      {/* Toast Notification */}
       {toast.show && (
-        <div className={userModeStyles.toast}> {/* 应用 userModeStyles.toast */}
+        <div className={userModeStyles.toast}> {/* Applied userModeStyles.toast */}
           {toast.message}
         </div>
       )}
 
-       {/* 列表模态框 */}
+       {/* List modal for followers, following, blocked */}
        {showListModal && (
            <ListModal
                isOpen={showListModal}
                onClose={() => setShowListModal(false)}
                title={listModalTitle}
                data={listModalData}
+               onUserClick={handleUserClick}
            />
        )}
 
-       {/* 可见性设置模态框 (您可以根据需要创建并在这里引入) */}
-       {/*
-       {showVisibilityModal && (
+       {/* Visibility Settings Modal */}
+       {showVisibilityModal && currentUser && userProfile && isOwnProfile && (
            <VisibilitySettingsModal
                isOpen={showVisibilityModal}
                onClose={() => setShowVisibilityModal(false)}
                settings={visibilitySettings}
-               onSave={updateVisibilitySetting}
-               editingField={editingField}
+               onSave={handleSaveVisibilitySettings}
+               visibilityFields={visibilityFields}
            />
        )}
-        */}
-    </Layout>
+
+    </Layout> // Closing Layout tag
   );
 }

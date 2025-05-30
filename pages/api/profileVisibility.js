@@ -53,30 +53,11 @@ export default async function handler(req, res) {
     try {
       const connection = await getConnection();
       
-      // 检查设置是否已存在
-      const [existingSettings] = await connection.execute(
-        `SELECT * FROM profilevisibility 
-         WHERE user_id = ? AND field_name = ?`,
-        [userId, fieldName]
+      // 使用存储过程保存可见性设置
+      await connection.execute(
+        'CALL sp_save_profile_visibility(?, ?, ?, ?, ?)',
+        [userId, fieldName, visibleToAdminOnly ? 1 : 0, visibleToFollowersOnly ? 1 : 0, visibleToAll ? 1 : 0]
       );
-      
-      if (existingSettings.length > 0) {
-        // 更新现有设置
-        await connection.execute(
-          `UPDATE profilevisibility 
-           SET visible_to_admin_only = ?, visible_to_followers_only = ?, visible_to_all = ?
-           WHERE user_id = ? AND field_name = ?`,
-          [visibleToAdminOnly ? 1 : 0, visibleToFollowersOnly ? 1 : 0, visibleToAll ? 1 : 0, userId, fieldName]
-        );
-      } else {
-        // 创建新设置
-        await connection.execute(
-          `INSERT INTO profilevisibility 
-           (user_id, field_name, visible_to_admin_only, visible_to_followers_only, visible_to_all)
-           VALUES (?, ?, ?, ?, ?)`,
-          [userId, fieldName, visibleToAdminOnly ? 1 : 0, visibleToFollowersOnly ? 1 : 0, visibleToAll ? 1 : 0]
-        );
-      }
       
       await connection.end();
       
@@ -88,7 +69,7 @@ export default async function handler(req, res) {
       console.error('更新可见性设置失败:', error);
       return res.status(500).json({ 
         success: false, 
-        message: '服务器错误' 
+        message: `服务器错误: ${error.message || error}`
       });
     }
   } 

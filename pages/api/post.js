@@ -132,38 +132,30 @@ async function checkUserLikes(userId, posts = [], comments = []) {
 async function addLike(userId, targetType, targetId) {
   const connection = await getConnection();
   try {
-    // 查询是否已点赞
-    const [rows] = await connection.execute(
-      'SELECT like_id FROM Likes WHERE user_id = ? AND target_type = ? AND target_id = ?',
+    // 使用存储过程处理点赞/取消点赞
+    await connection.execute(
+      'CALL sp_toggle_like(?, ?, ?)',
       [userId, targetType, targetId]
     );
 
-    if (rows.length > 0) {
-      // 已点赞，执行取消点赞
-      await connection.execute(
-        'DELETE FROM Likes WHERE user_id = ? AND target_type = ? AND target_id = ?',
-        [userId, targetType, targetId]
-      );
-      // 查询最新点赞数
-      const [countResult] = await connection.execute(
-        'SELECT COUNT(*) as count FROM Likes WHERE target_type = ? AND target_id = ?',
-        [targetType, targetId]
-      );
-      return { success: true, action: 'unliked', count: countResult[0].count, liked: false };
-    } else {
-      // 未点赞，执行新增点赞
-      await connection.execute(
-        `INSERT INTO Likes (user_id, target_type, target_id, create_at)
-         VALUES (?, ?, ?, CURRENT_TIMESTAMP)`,
-        [userId, targetType, targetId]
-      );
-      // 查询最新点赞数
-      const [countResult] = await connection.execute(
-        'SELECT COUNT(*) as count FROM Likes WHERE target_type = ? AND target_id = ?',
-        [targetType, targetId]
-      );
-      return { success: true, action: 'liked', count: countResult[0].count, liked: true };
-    }
+    // 查询最新点赞数
+    const [countResult] = await connection.execute(
+      'SELECT COUNT(*) as count FROM Likes WHERE target_type = ? AND target_id = ?',
+      [targetType, targetId]
+    );
+
+    // 检查是否已点赞
+    const [likeResult] = await connection.execute(
+      'SELECT 1 FROM Likes WHERE user_id = ? AND target_type = ? AND target_id = ?',
+      [userId, targetType, targetId]
+    );
+
+    return { 
+      success: true, 
+      action: likeResult.length > 0 ? 'liked' : 'unliked', 
+      count: countResult[0].count, 
+      liked: likeResult.length > 0 
+    };
   } finally {
     await connection.end();
   }

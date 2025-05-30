@@ -71,6 +71,9 @@ export default function Layout({ children, home }) {
       <main className={styles.mainContent}>{children}</main>
       {!home && (
         <div className={styles.backToHome}>
+          <Link href="/level-rules" className={styles.backLink}>
+            等级规则
+          </Link>
           <a href="#" onClick={handleBackToHome} className={styles.backLink}>
             ← Back to home
           </a>

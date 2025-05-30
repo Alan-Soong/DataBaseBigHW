@@ -1,30 +1,43 @@
-import { query } from '../db'; // 假设您的数据库查询函数在这里
-import { authenticatedRoute } from '../auth/authenticatedRoute';
+import { getConnection } from '../db';
 
-
-export default authenticatedRoute(async (req, res) => {
+export default async function handler(req, res) {
   if (req.method !== 'GET') {
-    return res.status(405).json({ message: 'Method Not Allowed' });
+    res.setHeader('Allow', ['GET']);
+    return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 
-  const { userId } = req.query; // 获取要查询的用户的ID
+  const { userId } = req.query;
 
   if (!userId) {
-    return res.status(400).json({ message: 'User ID is required' });
+    return res.status(400).json({
+      success: false,
+      message: '缺少用户ID参数'
+    });
   }
 
   try {
-    // 查询数据库获取该用户关注的人的列表
-    // 假设有一个 follows 表，结构为 follower_id, following_id
-    const result = await query(
-      `SELECT u.user_id, u.username FROM follows f JOIN users u ON f.following_id = u.user_id WHERE f.follower_id = ?`,
+    const connection = await getConnection();
+
+    // 获取用户的关注列表
+    const [following] = await connection.execute(
+      `SELECT u.user_id, u.username, u.level
+       FROM Users u
+       INNER JOIN followrelation f ON u.user_id = f.followed_id
+       WHERE f.follower_id = ?`,
       [userId]
     );
 
-    res.status(200).json({ success: true, following: result });
+    await connection.end();
+
+    return res.status(200).json({
+      success: true,
+      following
+    });
   } catch (error) {
-    console.error('Error fetching following list:', error.message); // 打印错误消息
-    console.error('Error details:', error); // 打印完整的错误对象
-    res.status(500).json({ success: false, message: 'Failed to fetch following list', error: error.message }); // 在响应中包含错误消息
+    console.error('获取关注列表失败:', error);
+    return res.status(500).json({
+      success: false,
+      message: '获取关注列表失败'
+    });
   }
-}); 
+} 
