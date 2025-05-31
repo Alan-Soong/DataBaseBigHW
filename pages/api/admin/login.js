@@ -36,6 +36,8 @@ export default async function handler(req, res) {
     }
 
     // 返回成功响应，包含用户信息
+    // 设置登录 cookie
+    res.setHeader('Set-Cookie', 'login_token=valid; Path=/; HttpOnly; Max-Age=604800'); // Max-Age 设置为一周 (60*60*24*7)
     return res.status(200).json({ 
       success: true, 
       message: '登录成功', 

@@ -6,9 +6,16 @@ export default async function handler(req, res) {
       const connection = await getConnection();
       
       // 获取所有频道
-      const [sections] = await connection.execute(
-        'SELECT section_id, section_name, description FROM Section'
-      );
+      const [sections] = await connection.execute(`
+        SELECT 
+          s.section_id, 
+          s.section_name, 
+          s.description,
+          COUNT(bt.post_id) AS post_count
+        FROM Section s
+        LEFT JOIN Belonging_to bt ON s.section_id = bt.section_id
+        GROUP BY s.section_id, s.section_name, s.description
+      `);
       
       await connection.end();
       

@@ -34,6 +34,7 @@
 
 .sidebarMenu li {
   margin-bottom: 10px;
+  cursor: pointer; /* 显示手型光标 */
 }
 
 .sidebarMenu a {

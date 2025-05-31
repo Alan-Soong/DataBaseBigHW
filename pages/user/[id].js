@@ -6,7 +6,6 @@ import userModeStyles from '../../styles/user_mode.module.css';
 import Link from 'next/link';
 import Head from 'next/head';
 import ListModal from '../../components/ListModal';
-import VisibilitySettingsModal from '../../components/VisibilitySettingsModal';
 
 export default function UserProfile() {
   const router = useRouter();
@@ -17,9 +16,6 @@ export default function UserProfile() {
   const [isFollowing, setIsFollowing] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
-  const [visibilitySettings, setVisibilitySettings] = useState({});
-  const [showVisibilityModal, setShowVisibilityModal] = useState(false);
-  const [editingField, setEditingField] = useState(null);
   const [viewerId, setViewerId] = useState(null);
   const [toast, setToast] = useState({ show: false, message: '' });
 
@@ -75,82 +71,56 @@ export default function UserProfile() {
   }, []); // 仅在组件挂载时运行一次
 
   // 获取用户资料
-  useEffect(() => {
     const fetchUserProfile = async () => {
       if (!id) return;
 
       try {
         setLoading(true);
+      // Include viewerId in the API call if currentUser is available
         const viewerIdParam = currentUser ? `&viewerId=${currentUser.user_id}` : '';
+      console.log('Fetching user profile with ID:', id, 'Viewer ID:', currentUser?.user_id);
         const res = await fetch(`/api/userProfile?userId=${id}${viewerIdParam}`);
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      if (!res.ok) { // Check for HTTP errors
+           const errorText = await res.text(); // Read response body for more details
+           console.error(`HTTP error! status: ${res.status}`, errorText);
+           throw new Error(`HTTP error! status: ${res.status}`);
+      }
 
         const data = await res.json();
         if (data.success) {
           setUserProfile(data.user);
-          console.log('User Profile:', data.user);
+        console.log('User Profile Data:', data.user);
 
           if (data.user) {
-             setIsFollowing(data.user.isFollowing || false);
-             setIsBlocked(data.user.isBlocked || false);
+           // Ensure these states are updated based on fetched data
+           setIsFollowing(data.user.isFollowing || false); // Use boolean default
+           setIsBlocked(data.user.isBlocked || false); // Use boolean default
           }
 
-          // 如果是自己的主页，获取可见性设置
-          if (currentUser && currentUser.user_id === parseInt(id)) {
-               fetchVisibilitySettings(currentUser.user_id); // Call the function to fetch settings
+           // 如果是自己的主页，获取可见性设置
+        if (currentUser && data.user && currentUser.user_id === data.user.user_id) { // Use data.user here
+             // 移除 fetchVisibilitySettings 调用
            }
 
         } else {
           console.error('获取用户资料失败:', data.message);
           showToast('获取用户资料失败: ' + data.message);
-          setUserProfile(null);
+        setUserProfile(null); // Set userProfile to null on failure
         }
       } catch (error) {
         console.error('获取用户资料失败:', error);
         showToast('获取用户资料失败: ' + error.message);
-        setUserProfile(null);
+      setUserProfile(null); // Set userProfile to null on failure
       } finally {
         setLoading(false);
       }
     };
 
+  useEffect(() => { // useEffect to call fetchUserProfile when id or currentUser changes
     if (id) {
       fetchUserProfile();
     }
-  }, [id, currentUser]);
-
-  // 获取可见性设置 (从 settings.js 迁移过来)
-  const fetchVisibilitySettings = async (userId) => {
-    try {
-      const res = await fetch(`/api/profileVisibility?userId=${userId}`);
-      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-
-      const data = await res.json();
-      if (data.success) {
-        const settings = {};
-        // Initialize all fields' settings, default to visible to all if not returned
-        visibilityFields.forEach(field => {
-            const userSetting = data.settings.find(s => s.field_name === field.name);
-            settings[field.name] = userSetting ? {
-                visibleToAdminOnly: userSetting.visible_to_admin_only === 1,
-                visibleToFollowersOnly: userSetting.visible_to_followers_only === 1,
-                visibleToAll: userSetting.visible_to_all === 1
-            } : { // Default to visible to all if no setting found
-                 visibleToAdminOnly: false,
-                 visibleToFollowersOnly: false,
-                 visibleToAll: true
-            };
-        });
-        setVisibilitySettings(settings);
-      } else {
-        console.error('获取可见性设置失败:', data.message);
-        // Optionally show toast or set default settings on failure
-      }
-    } catch (error) {
-      console.error('获取可见性设置失败:', error);
-      // Optionally show toast or set default settings on failure
-    }
-  };
+  }, [id, currentUser]); // Added currentUser to dependencies
 
   // 处理关注/取消关注
   const handleFollow = async () => {
@@ -178,6 +148,8 @@ export default function UserProfile() {
         }
 
         showToast(action === 'follow' ? '关注成功' : '取消关注成功');
+        // 手动刷新用户资料以获取最新关注/粉丝数
+        fetchUserProfile();
       } else {
         showToast(data.message || '操作失败');
       }
@@ -216,6 +188,8 @@ export default function UserProfile() {
              }
         }
         showToast(action === 'block' ? '拉黑成功' : '取消拉黑成功');
+        // 手动刷新用户资料以获取最新关注/粉丝数
+        fetchUserProfile();
       } else {
         showToast(data.message || '操作失败');
       }
@@ -224,45 +198,6 @@ export default function UserProfile() {
       showToast('操作失败，请稍后重试');
     } finally {
        setActionLoading(false);
-    }
-  };
-
-  // 打开可见性设置模态框
-  const openVisibilityModal = (fieldName) => {
-    setEditingField(fieldName);
-    setShowVisibilityModal(true);
-  };
-
-  // 更新可见性设置
-  const updateVisibilitySetting = async (setting) => {
-    if (!currentUser || !editingField) return;
-
-    try {
-      const res = await fetch('/api/profileVisibility', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: currentUser.user_id,
-          fieldName: editingField,
-          ...setting
-        })
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        // 更新本地状态
-        setVisibilitySettings(prev => ({
-          ...prev,
-          [editingField]: setting
-        }));
-        showToast('设置更新成功！');
-        setShowVisibilityModal(false);
-      } else {
-        showToast(data.message || '更新失败');
-      }
-    } catch (error) {
-      console.error('更新可见性设置失败:', error);
-      showToast('操作失败，请稍后重试');
     }
   };
 
@@ -412,7 +347,7 @@ export default function UserProfile() {
   // 处理查看粉丝列表
   const handleViewFollowers = async () => {
     if (!userProfile || !userProfile.user_id) return;
-    try {
+     try {
       const res = await fetch(`/api/user/getFollowers?userId=${userProfile.user_id}`);
       const data = await res.json();
       if (data.success) {
@@ -456,54 +391,36 @@ export default function UserProfile() {
     setShowListModal(false);
   };
 
-  // 处理保存可见性设置 (从 settings.js 迁移过来)
-  const handleSaveVisibilitySettings = async (settingsToSave) => {
-    if (!currentUser) return false; // Return false on failure
+  // 处理帖子点赞
+  const handlePostLike = async (post) => {
+    if (!currentUser || !userProfile) return;
 
-    let success = true; // Track if all saves were successful
+    try {
+      const res = await fetch('/api/user/likePost', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: currentUser.user_id,
+          postId: post.post_id
+        })
+      });
 
-    for (const fieldName of Object.keys(settingsToSave)) {
-      const setting = settingsToSave[fieldName];
-      const settingData = {
-        userId: currentUser.user_id,
-        fieldName: fieldName,
-        visibleToAdminOnly: setting.visibleToAdminOnly ? 1 : 0,
-        visibleToFollowersOnly: setting.visibleToFollowersOnly ? 1 : 0,
-        visibleToAll: setting.visibleToAll ? 1 : 0,
-      };
-
-      try {
-        const res = await fetch('/api/profileVisibility', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(settingData),
-        });
-
-        const data = await res.json();
-        if (!data.success) {
-          console.error(`Failed to save setting for ${fieldName}:`, data.message);
-           // Use fieldName to find corresponding label for better error message
-          const field = visibilityFields.find(f => f.name === fieldName);
-          showToast(`保存 ${field ? field.label : fieldName} 失败: ${data.message}`);
-          success = false; // Mark as failed
-        }
-      } catch (error) {
-        console.error(`Error saving setting for ${fieldName}:`, error);
-         // Use fieldName to find corresponding label for better error message
-        const field = visibilityFields.find(f => f.name === fieldName);
-        showToast(`保存 ${field ? field.label : fieldName} 失败，请稍后重试`);
-        success = false; // Mark as failed
+      const data = await res.json();
+      if (data.success) {
+        // 更新帖子点赞状态
+        setUserProfile(prev => ({
+          ...prev,
+          recent_posts: prev.recent_posts.map(p =>
+            p.post_id === post.post_id ? { ...p, liked: data.liked, like_count: data.like_count } : p
+          )
+        }));
+        showToast(data.liked ? '点赞成功' : '取消点赞成功');
+      } else {
+        showToast(data.message || '点赞操作失败');
       }
-    }
-
-    if (success) {
-      showToast('设置保存成功！');
-      // Update local state with newly saved settings if needed, or re-fetch
-      // For simplicity, we can just re-fetch settings after successful save
-      fetchVisibilitySettings(currentUser.user_id);
-      return true; // Indicate success
-    } else {
-        return false; // Indicate failure
+    } catch (error) {
+      console.error('点赞操作失败:', error);
+      showToast('点赞操作失败，请稍后重试');
     }
   };
 
@@ -560,7 +477,7 @@ export default function UserProfile() {
                      {/* Other base info */} 
                      {shouldShowField('level') && (
                         <div className={userModeStyles.infoBlock}> {/* Applied userModeStyles.infoBlock */}
-                         等级：{userProfile.level_name}（{userProfile.level}）
+                         等级：{userProfile.level_name}
                        </div>
                      )}
                       {shouldShowField('experience') && (
@@ -603,13 +520,13 @@ export default function UserProfile() {
                    {/* Display follow and follower counts directly in stats area, not as buttons */} 
                    {shouldShowField('following_count') && (
                       <div className={userModeStyles.statBlock}> {/* Applied userModeStyles.statBlock */}
-                        关注：{userProfile.following_count}
-                      </div>
+                     关注：{userProfile.following_count}
+                   </div>
                    )}
                    {shouldShowField('follower_count') && (
                       <div className={userModeStyles.statBlock}> {/* Applied userModeStyles.statBlock */}
-                        粉丝：{userProfile.follower_count}
-                      </div>
+                     粉丝：{userProfile.follower_count}
+                   </div>
                    )}
                  </div>
               )}
@@ -644,10 +561,10 @@ export default function UserProfile() {
                 </div>
               )}
 
-               {/* 可见性设置按钮 (仅在自己的主页显示) - Modified to open modal */}
+              {/* 如果是自己的主页，显示可见性设置按钮 */}
               {isOwnProfile && (
                   <div className={userModeStyles.profileActions}> {/* Can reuse profileActions style or define new */}
-                      <button onClick={() => setShowVisibilityModal(true)} className={userModeStyles.listViewButton}> {/* Use listViewButton style */}
+                      <button onClick={() => router.push('/user/settings')} className={userModeStyles.listViewButton}> {/* Use listViewButton style */}
                           可见性设置
                       </button>
                   </div>
@@ -659,48 +576,58 @@ export default function UserProfile() {
             {shouldShowField('recent_posts') && (
               <div className={userModeStyles.profileRecentPosts}> {/* Applied userModeStyles.profileRecentPosts */}
                 <h2 className={userModeStyles.profileRecentPostsTitle}>最近发布的帖子</h2> {/* Applied userModeStyles.profileRecentPostsTitle */}
-                {userProfile.recent_posts && userProfile.recent_posts.length > 0 ? (
+              {userProfile.recent_posts && userProfile.recent_posts.length > 0 ? (
                   <div className={userModeStyles.postList}> {/* Applied userModeStyles.postList */}
-                    {userProfile.recent_posts.map(post => (
+                  {userProfile.recent_posts.map(post => (
                        <div key={post.post_id} className={userModeStyles.postCard}> {/* Applied userModeStyles.postCard */}
                           <div className={userModeStyles.postHeader}> {/* Applied userModeStyles.postHeader */}
                             <h3 className={userModeStyles.postCardTitle}> {/* Applied userModeStyles.postCardTitle */}
-                               <Link href={{ pathname: '/posts/[id]', query: { id: post.post_id } }}>
-                                 {post.title}
-                               </Link>
-                            </h3>
+                             <Link href={{ pathname: '/posts/[id]', query: { id: post.post_id } }}>
+                               {post.title}
+                             </Link>
+                          </h3>
                             <div className={userModeStyles.postMeta}> {/* Applied userModeStyles.postMeta */}
-                              <span>频道: {post.section_name || '未分类'}</span>
-                              <span>发布于: {formatDate(post.post_time)}</span>
-                              <span>评论: {post.comment_count || 0}</span>
-                              <span>点赞: {post.like_count || 0}</span>
+                            <span>频道: {post.section_name || '未分类'}</span>
+                            <span>发布于: {formatDate(post.post_time)}</span>
+                            <span>评论: {post.comment_count || 0}</span>
+                               {/* 点赞按钮 */}
+                               <button 
+                                 onClick={(e) => {
+                                   e.preventDefault(); // 阻止 Link 的默认跳转
+                                   handlePostLike(post);
+                                 }}
+                                 className={userModeStyles.likeButton} /* Applied userModeStyles.likeButton */
+                               >
+                                  {/* 根据点赞状态判断显示文本和数量 */}
+                                  {post.liked ? '取消赞' : '赞'} ({post.like_count || 0})
+                               </button>
                                {/* Delete button */}
                                {isOwnProfile && ( // Only show delete button when viewing own profile
-                                  <button
-                                    onClick={(e) => {
+                                <button
+                                  onClick={(e) => {
                                       e.preventDefault(); // Prevent default Link behavior
-                                      handleDeletePost(post.post_id);
-                                    }}
+                                    handleDeletePost(post.post_id);
+                                  }}
                                     className={userModeStyles.deleteButton} /* Applied userModeStyles.deleteButton */
-                                    title="删除帖子"
-                                  >
-                                    删除
-                                  </button>
-                                )}
-                            </div>
+                                  title="删除帖子"
+                                >
+                                  删除
+                                </button>
+                              )}
                           </div>
+                        </div>
                            <div className={userModeStyles.postContent}> {/* Applied userModeStyles.postContent */}
-                             {post.content && post.content.length > 150 ? `${post.content.substring(0, 150)}...` : post.content}
-                           </div>
-                       </div>
-                    ))}
-                  </div>
+                           {post.content && post.content.length > 150 ? `${post.content.substring(0, 150)}...` : post.content}
+                         </div>
+                     </div>
+                  ))}
+                </div>
                 ) : ( /* Else part for recent_posts list */
                    <div className={userModeStyles.emptyState}> {/* Applied userModeStyles.emptyState */} 
-                    <p>暂无发布的帖子。</p>
-                   </div>
+                  <p>暂无发布的帖子。</p>
+                 </div>
                 )} {/* Closing ternary for recent_posts list */}
-              </div>
+            </div>
             )} {/* Closing conditional rendering for recent_posts area */}
 
           </div> {/* Closing div for profileContent */}
@@ -722,17 +649,6 @@ export default function UserProfile() {
                title={listModalTitle}
                data={listModalData}
                onUserClick={handleUserClick}
-           />
-       )}
-
-       {/* Visibility Settings Modal */}
-       {showVisibilityModal && currentUser && userProfile && isOwnProfile && (
-           <VisibilitySettingsModal
-               isOpen={showVisibilityModal}
-               onClose={() => setShowVisibilityModal(false)}
-               settings={visibilitySettings}
-               onSave={handleSaveVisibilitySettings}
-               visibilityFields={visibilityFields}
            />
        )}
 

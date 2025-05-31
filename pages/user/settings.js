@@ -4,6 +4,7 @@ import Head from 'next/head';
 import Layout from '../../components/layout';
 import utilStyles from '../../styles/utils.module.css';
 import settingsStyles from '../../styles/settings.module.css'; // We will create this CSS module
+import Link from 'next/link'; // 导入 Link 组件
 
 export default function UserSettings() {
   const router = useRouter();
@@ -208,6 +209,13 @@ export default function UserSettings() {
       <Head><title>个人主页可见性设置</title></Head>
       <div className={settingsStyles.container}> {/* Use settingsStyles for container */}
         <h1>个人主页可见性设置</h1>
+
+        {/* 新增：返回主页链接 */}
+        <div style={{ marginBottom: '20px' }}> {/* 添加一些底部外边距 */}
+           <Link href="/posts/user_mode" className={settingsStyles.backLink}> {/* 使用 Link 组件和样式类 */}
+              ← 返回主页
+           </Link>
+        </div>
 
         <div className={settingsStyles.settingsList}> {/* Container for settings items */}
           {visibilityFields.map(field => (

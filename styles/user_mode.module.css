@@ -37,6 +37,28 @@
   margin-bottom: var(--spacing-large);
   position: relative;
   overflow: hidden;
+  max-width: 800px; /* 设置最大宽度 */
+  margin: var(--spacing-large) auto; /* 上下保持间距，左右自动居中 */
+}
+
+.postCard table {
+  width: 100%; /* 确保表格宽度占满容器 */
+  border-collapse: collapse; /* 合并边框 */
+  margin-top: var(--spacing-medium); /* 表格顶部间距 */
+}
+
+.postCard th,
+.postCard td {
+  padding: var(--spacing-small) var(--spacing-medium); /* 单元格内边距 */
+  border: 1px solid var(--border-color); /* 单元格边框 */
+  text-align: center; /* 文字居中 */
+  vertical-align: middle; /* 垂直居中 */
+}
+
+.postCard th {
+  background-color: var(--bg-light); /* 表头背景色 */
+  font-weight: 600;
+  color: var(--text-color);
 }
 
 .postCard:hover {
@@ -114,6 +136,7 @@
   gap: var(--spacing-medium);
   border-top: 1px solid var(--border-color);
   padding-top: var(--spacing-medium);
+  justify-content: center; /* 按钮在操作区内居中 */
 }
 
 .likeButton, .commentButton, .deleteButton {
@@ -177,6 +200,77 @@
   font-size: 1.2rem; /* 调整图标大小 */
 }
 
+/* 新增通用按钮样式 */
+.button {
+  padding: var(--spacing-small) var(--spacing-large);
+  border: 1px solid var(--primary-color); /* 蓝色边框 */
+  border-radius: 25px; /* 圆角 */
+  background-color: transparent; /* 透明背景 */
+  color: var(--primary-color); /* 蓝色文字 */
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  text-align: center; /* 文字居中 */
+}
+
+.button:hover {
+  background-color: var(--primary-color); /* 悬停时蓝色背景 */
+  color: white; /* 悬停时白色文字 */
+}
+
+.button.active {
+  background-color: var(--primary-color); /* 选中时蓝色背景 */
+  color: white; /* 选中时白色文字 */
+  font-weight: 600;
+}
+
+/* 调整其他按钮样式继承和覆盖 */
+.button.primaryButton {
+  background-color: var(--primary-color); /* 蓝色背景 */
+  color: white; /* 白色文字 */
+  border: 1px solid var(--primary-color); /* 蓝色边框 */
+}
+
+.button.primaryButton:hover {
+  background-color: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+.button.dangerButton {
+  background-color: var(--danger-color); /* 危险红背景 */
+  color: white; /* 白色文字 */
+  border: 1px solid var(--danger-color); /* 危险红边框 */
+}
+
+.button.dangerButton:hover {
+  background-color: var(--danger-hover);
+  border-color: var(--danger-hover);
+}
+
+.button.secondaryButton {
+  background-color: transparent; /* 透明背景 */
+  color: var(--text-light); /* 浅色文字 */
+  border: 1px solid var(--border-color); /* 边框颜色 */
+}
+
+.button.secondaryButton:hover {
+  background-color: var(--bg-light); /* 浅背景 */
+  color: var(--text-color); /* 文字颜色 */
+  border-color: var(--text-color); /* 边框颜色 */
+}
+
+.button.smallButton {
+  padding: var(--spacing-small) var(--spacing-medium); /* 减小内边距 */
+  font-size: 0.9rem; /* 减小字体 */
+}
+
+/* 调整 Tab 按钮（之前是 likeButton）使用新的 .button 样式 */
+/* 在 admin_mode.js 中已经将 class 从 likeButton 改为 button */
+
+/* 调整列表操作按钮使用新的 .button 样式 */
+/* 在 admin_mode.js 中已经将 class 从之前的如 deleteButton 改为更通用的 button 类配合 specific 样式 */
+
 /* 美化发帖表单 */
 .newPostForm {
   background-color: white;
@@ -199,37 +293,69 @@
 
 .formGroup {
   margin-bottom: var(--spacing-large);
+  display: flex; /* 使用Flexbox布局 */
+  align-items: center; /* 垂直居中 */
+  gap: var(--spacing-medium); /* 子元素间距 */
 }
 
 .formGroup label {
-  display: block;
-  margin-bottom: var(--spacing-small);
+  display: block; /* 保持block以便设置margin-bottom，虽然在flex容器中效果不同 */
+  /* margin-bottom: var(--spacing-small); */ /* 在flex容器中不需要 */
   font-weight: 500;
   color: var(--text-color);
+  flex-shrink: 0; /* 防止标签被压缩 */
 }
 
-.formGroup input,
+.formGroup input[type="text"],
+.formGroup input[type="email"],
+.formGroup input[type="password"],
 .formGroup textarea,
-.formGroup select {
+.formInput, /* 通用输入样式 */
+.searchSelect { /* 新增用于搜索下拉框的类 */
   width: 100%;
   padding: var(--spacing-small) var(--spacing-medium);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
   font-size: 1rem;
-  transition: var(--transition);
+  color: var(--text-color);
+  background-color: white; /* 确保背景是白色 */
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  box-sizing: border-box; /* 包含 padding 和 border 在元素的总宽度内 */
+  appearance: none; /* 移除默认外观 */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  /* 添加自定义箭头 */
+  background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20256%20448%22%20enable-background%3D%22new%200%200%20256%20448%22%3E%3Cstyle%20type%3D%22text%2Fcss%22%3E.arrow%7Bfill%3A%23555%3B%7D%3C%2Fstyle%3E%3Cpath%20class%3D%22arrow%22%20d%3D%22M255.66%20150.66c-4.29-4.3-11.24-4.3-15.53%200L128%20263.94%2015.87%20150.66c-4.29-4.3-11.24-4.3-15.53%200-4.29%204.29-4.29%2011.24%200%2015.53L120.33%20287c4.29%204.3%2011.24%204.3%2015.53%200L255.66%20166.19c4.29-4.3%204.29-11.25%200-15.53z%22%2F%3E%3C%2Fsvg%3E');
+  background-repeat: no-repeat;
+  background-position: right 10px top 50%;
+  background-size: 12px auto;
+  padding-right: 30px; /* 为箭头留出空间 */
+}
+
+/* 调整添加频道按钮样式 */
+.formGroup button {
+   flex-shrink: 0; /* 防止按钮被压缩 */
+   /* 继承 .button 的样式 */
 }
 
 .formGroup input:focus,
 .formGroup textarea:focus,
-.formGroup select:focus {
+.formInput:focus,
+.searchSelect:focus { /* 新增选择框焦点样式 */
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(var(--primary-color), 0.2); /* 调整阴影效果 */
-  outline: none;
+  box-shadow: 0 0 0 0.2rem rgba(var(--primary-color), 0.25); /* 使用变量并调整透明度 */
+  outline: none; /* 移除默认焦点轮廓 */
 }
 
 .formGroup textarea {
-  min-height: 150px; /* 增加最小高度 */
-  resize: vertical;
+  width: auto; /* 宽度自适应 */
+  flex-grow: 1; /* 填充剩余空间 */
+  padding: var(--spacing-small) var(--spacing-medium);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  transition: var(--transition);
+  box-sizing: border-box; /* 包含padding和border */
 }
 
 .formActions {
@@ -320,6 +446,31 @@
   color: var(--primary-color);
   border-left-color: var(--primary-color);
   transform: translateX(5px);
+}
+
+/* 新增：使侧边栏菜单中的按钮（频道按钮）样式与链接样式一致 */
+.sidebarMenu button.navItem {
+  display: block; /* 使按钮像链接一样独占一行 */
+  width: 100%; /* 让按钮填充其父容器的宽度 */
+  padding: var(--spacing-small) var(--spacing-medium); /* 复制链接的内边距 */
+  border-radius: var(--border-radius); /* 复制链接的圆角 */
+  transition: var(--transition); /* 复制链接的过渡效果 */
+  color: var(--text-color); /* 复制链接的文字颜色 */
+  text-decoration: none; /* 移除可能的下划线 */
+  border: none; /* 移除默认按钮边框 */
+  background-color: transparent; /* 移除默认按钮背景色 */
+  text-align: left; /* 使文字左对齐 */
+  cursor: pointer; /* 显示手型光标 */
+  border-left: 3px solid transparent; /* 复制链接的左侧边线 */
+  box-sizing: border-box; /* 确保padding和border包含在width内 */
+}
+
+/* 新增：为侧边栏菜单中的按钮添加 hover 和 active 样式 */
+.sidebarMenu button.navItem:hover, .sidebarMenu button.navItem.active {
+  background-color: var(--bg-light); /* 复制链接的 hover/active 背景色 */
+  color: var(--primary-color); /* 复制链接的 hover/active 文字颜色 */
+  border-left-color: var(--primary-color); /* 复制链接的 hover/active 左侧边线颜色 */
+  transform: translateX(5px); /* 复制链接的 hover/active 动画效果 */
 }
 
 .sidebarSection {
@@ -966,6 +1117,7 @@
   color: var(--text-color);
   background-color: var(--bg-light);
   transition: var(--transition);
+  box-sizing: border-box;
 }
 
 .commentInput:focus {
@@ -980,10 +1132,6 @@
   margin-bottom: var(--spacing-medium);
   padding-bottom: var(--spacing-small);
   border-bottom: 2px solid var(--primary-color);
-}
-
-.commentList {
-  /* 顶层评论列表容器无特定缩进 */
 }
 
 .commentItem {
@@ -1066,4 +1214,109 @@
 .replyButton:hover {
   color: var(--primary-hover);
   text-decoration: underline;
+}
+
+.userLink {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.userLink:hover {
+  color: var(--primary-color-dark);
+  text-decoration: underline;
+}
+
+/* 用户名编辑按钮 */
+.editUsernameButton {
+  background: none;
+  border: none;
+  color: var(--primary-color); /* 使用主题色 */
+  font-size: 0.9rem; /* 小字体 */
+  cursor: pointer;
+  transition: var(--transition);
+  margin-left: var(--spacing-small); /* 与用户名稍作间隔 */
+  padding: 0 var(--spacing-small); /* 减小内边距 */
+}
+
+.editUsernameButton:hover {
+  text-decoration: underline; /* 悬停时加下划线 */
+  opacity: 0.8; /* 悬停时降低透明度 */
+}
+
+/* 用户名编辑模式下的输入框和按钮容器 */
+.editUsernameInput {
+    display: flex;
+    flex-direction: column; /* 子元素垂直堆叠 */
+    gap: var(--spacing-small); /* 输入框和按钮容器之间的间隔 */
+    flex-wrap: wrap; /* 小屏幕下允许换行 */
+    width: 100%; /* 确保输入框容器填充可用空间 */
+}
+
+.editUsernameInput .inputField {
+    padding: var(--spacing-small);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    flex-grow: 1; /* 允许输入框填充可用空间 */
+    min-width: 150px; /* 最小宽度 */
+}
+
+/* 用户名编辑模式下的保存和取消按钮 */
+.editActionButton {
+    padding: var(--spacing-small) var(--spacing-medium); /* 从 .button 复制 */
+    border: 1px solid var(--primary-color); /* 从 .button 复制 */
+    border-radius: 25px; /* 从 .button 复制 */
+    background-color: transparent; /* 从 .button 复制 */
+    color: var(--primary-color); /* 从 .button 复制 */
+    font-size: 0.9rem; /* 从 .button 复制并调整 */
+    font-weight: 500; /* 从 .button 复制 */
+    cursor: pointer; /* 从 .button 复制 */
+    transition: var(--transition); /* 从 .button 复制 */
+    text-align: center; /* 从 .button 复制 */
+}
+
+.editActionButton:hover {
+    background-color: var(--primary-color); /* 从 .button:hover 复制 */
+    color: white; /* 从 .button:hover 复制 */
+}
+
+.editActionButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* 错误消息样式 */
+.errorMessage {
+    color: var(--danger-color);
+    font-size: 0.8rem;
+    margin-top: var(--spacing-small);
+    flex-basis: 100%; /* 错误消息独占一行 */
+}
+
+/* 用户名显示区域容器 */
+.usernameArea {
+    display: flex;
+    align-items: center;
+    /* 根据需要调整对齐和间距 */
+}
+
+.displayUsername {
+    display: flex;
+    align-items: center;
+}
+
+/* 调整用户名显示标题样式 */
+.displayUsername h2 {
+    margin: 0; /* 移除默认外边距 */
+}
+
+/* 用户名编辑模式下的按钮容器 */
+.editActionsContainer {
+    display: flex;
+    gap: var(--spacing-small); /* 按钮之间的间距 */
+    margin-top: var(--spacing-small); /* 与输入框的顶部间隔 */
+    width: 100%; /* 让容器填充可用宽度 */
+    justify-content: center; /* 按钮居中对齐 */
 }

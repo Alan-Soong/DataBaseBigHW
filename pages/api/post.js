@@ -6,27 +6,21 @@ async function getPosts(page = 1, size = 10, connection, sectionId = null) {
   const offset = (parseInt(page) - 1) * parseInt(size);
   try {
     let query = `
-      SELECT p.post_id, p.title, p.content, p.create_at, p.post_time,
-       s.section_id, s.section_name,
-       u.user_id, u.username,
-       (SELECT COUNT(*) FROM comment c WHERE c.post_id = p.post_id) AS comment_count,
-       (SELECT COUNT(*) FROM likes l WHERE l.target_type = 'post' AND l.target_id = p.post_id) AS like_count
-        FROM post p
-        INNER JOIN users u ON p.user_id = u.user_id
-        LEFT JOIN belonging_to bt ON p.post_id = bt.post_id
-        LEFT JOIN section s ON bt.section_id = s.section_id
-        WHERE p.post_time IS NOT NULL
+      SELECT post_id, user_id, title, content, create_at, post_time,
+             section_id, section_name, author_username, comment_count, like_count
+      FROM post_details_view
+      WHERE post_time IS NOT NULL
     `;
 
     const params = [];
     
     // 如果指定了频道ID，添加筛选条件
     if (sectionId) {
-      query += ` AND s.section_id = ?`;
+      query += ` AND section_id = ?`;
       params.push(sectionId);
     }
 
-    query += ` ORDER BY p.post_time DESC LIMIT ? OFFSET ?`;
+    query += ` ORDER BY post_time DESC LIMIT ? OFFSET ?`;
     params.push(parseInt(size), offset);
 
     const [rows] = await connection.execute(query, params);
@@ -134,7 +128,7 @@ async function addLike(userId, targetType, targetId) {
   try {
     // 使用存储过程处理点赞/取消点赞
     await connection.execute(
-      'CALL sp_toggle_like(?, ?, ?)',
+      'CALL toggle_like(?, ?, ?)',
       [userId, targetType, targetId]
     );
 

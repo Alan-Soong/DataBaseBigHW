@@ -77,6 +77,9 @@ export default function Layout({ children, home }) {
           <a href="#" onClick={handleBackToHome} className={styles.backLink}>
             ← Back to home
           </a>
+          <Link href="/posts/user_mode" className={styles.backLink}>
+            返回主页
+          </Link>
         </div>
       )}
 

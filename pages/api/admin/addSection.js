@@ -6,7 +6,7 @@ export default async function handler(req, res) {
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 
-  const { sectionName } = req.body;
+  const { sectionName, description } = req.body;
 
   if (!sectionName) {
     return res.status(400).json({ success: false, message: '缺少频道名称' });
@@ -24,7 +24,7 @@ export default async function handler(req, res) {
     }
 
     // 插入新频道
-    const [result] = await conn.query('INSERT INTO section (section_name) VALUES (?)', [sectionName]);
+    const [result] = await conn.query('INSERT INTO section (section_name, description) VALUES (?, ?)', [sectionName, description || '']);
     
     conn.end();
     res.status(201).json({ success: true, message: '频道添加成功', sectionId: result.insertId });

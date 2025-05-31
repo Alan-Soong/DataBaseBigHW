@@ -6,7 +6,6 @@ import userModeStyles from '../../styles/user_mode.module.css';
 import Link from 'next/link';
 import Head from 'next/head';
 import ListModal from '../../components/ListModal';
-import VisibilitySettingsModal from '../../components/VisibilitySettingsModal';
 
 export default function MyProfile() {
   const router = useRouter();
@@ -14,8 +13,6 @@ export default function MyProfile() {
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
-  const [visibilitySettings, setVisibilitySettings] = useState({});
-  const [showVisibilityModal, setShowVisibilityModal] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '' });
 
   const [showListModal, setShowListModal] = useState(false);
@@ -36,6 +33,11 @@ export default function MyProfile() {
     { name: 'blocked_list', label: '拉黑列表' },
   ];
 
+  // 新增 State for username editing
+  const [isEditingUsername, setIsEditingUsername] = useState(false);
+  const [newUsername, setNewUsername] = useState('');
+  const [usernameEditError, setUsernameEditError] = useState('');
+
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
@@ -49,7 +51,6 @@ export default function MyProfile() {
           if (profileData.success) {
              setCurrentUser(profileData.user);
              await fetchUserProfileData(data.userId);
-             await fetchVisibilitySettings(data.userId);
              setLoading(false);
           } else {
              console.error('获取当前用户资料失败:', profileData.message);
@@ -95,87 +96,6 @@ export default function MyProfile() {
            showToast('获取用户资料失败: ' + error.message);
       }
    };
-
-  const fetchVisibilitySettings = async (userId) => {
-    try {
-      const res = await fetch(`/api/profileVisibility?userId=${userId}`);
-      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-
-      const data = await res.json();
-      if (data.success) {
-        const settings = {};
-        visibilityFields.forEach(field => {
-            const userSetting = data.settings.find(s => s.field_name === field.name);
-            settings[field.name] = userSetting ? {
-                visibleToAdminOnly: userSetting.visible_to_admin_only === 1,
-                visibleToFollowersOnly: userSetting.visible_to_followers_only === 1,
-                visibleToAll: userSetting.visible_to_all === 1
-            } : {
-                 visibleToAdminOnly: false,
-                 visibleToFollowersOnly: false,
-                 visibleToAll: true
-            };
-        });
-        setVisibilitySettings(settings);
-      } else {
-        console.error('获取可见性设置失败:', data.message);
-        showToast('获取可见性设置失败: ' + data.message);
-      }
-    } catch (error) {
-      console.error('获取可见性设置失败:', error);
-      showToast('获取可见性设置失败，请稍后重试');
-    }
-  };
-
-   const handleSaveVisibilitySettings = async (settingsToSave) => {
-    if (!currentUser) return false;
-
-    let success = true;
-
-    for (const fieldName of Object.keys(settingsToSave)) {
-      const setting = settingsToSave[fieldName];
-      const settingData = {
-        userId: currentUser.user_id,
-        fieldName: fieldName,
-        visibleToAdminOnly: setting.visibleToAdminOnly ? 1 : 0,
-        visibleToFollowersOnly: setting.visibleToFollowersOnly ? 1 : 0,
-        visibleToAll: setting.visibleToAll ? 1 : 0,
-      };
-
-      try {
-        const res = await fetch('/api/profileVisibility', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(settingData),
-        });
-
-        const data = await res.json();
-        if (!data.success) {
-          console.error(`Failed to save setting for ${fieldName}:`, data.message);
-          const field = visibilityFields.find(f => f.name === fieldName);
-          showToast(`保存 ${field ? field.label : fieldName} 失败: ${data.message}`);
-          success = false;
-        }
-      } catch (error) {
-        console.error(`Error saving setting for ${fieldName}:`, error);
-        const field = visibilityFields.find(f => f.name === fieldName);
-        showToast(`保存 ${field ? field.label : fieldName} 失败，请稍后重试`);
-        success = false;
-      }
-    }
-
-    if (success) {
-      showToast('设置保存成功！');
-      fetchVisibilitySettings(currentUser.user_id);
-      return true;
-    } else {
-        return false;
-    }
-  };
-
-  const shouldShowField = (fieldName) => {
-    return true; 
-  };
 
    const handleViewFollowing = async () => {
     if (!currentUser || !currentUser.user_id) return;
@@ -295,6 +215,80 @@ export default function MyProfile() {
     }
   };
 
+  // 当 userProfile 加载或更新时，初始化 newUsername，使用 useEffect 防止无限重渲染
+  useEffect(() => {
+    if (userProfile?.username) {
+      setNewUsername(userProfile.username);
+    }
+  }, [userProfile?.username]);
+
+  // 处理用户名编辑模式切换
+  const handleEditUsernameClick = () => {
+    setIsEditingUsername(true);
+    setNewUsername(userProfile.username); // 编辑时，输入框显示当前用户名
+    setUsernameEditError('');
+  };
+
+  // 处理新用户名输入变化
+  const handleNewUsernameChange = (e) => {
+    setNewUsername(e.target.value);
+    setUsernameEditError('');
+  };
+
+  // 取消编辑用户名
+  const handleCancelEditUsername = () => {
+    setIsEditingUsername(false);
+    setNewUsername(userProfile.username); // 恢复为当前用户名
+    setUsernameEditError('');
+  };
+
+  // 保存用户名
+  const handleSaveUsername = async () => {
+    if (!currentUser || !currentUser.user_id) {
+        showToast('请先登录');
+        return;
+    }
+    if (!newUsername.trim()) {
+        setUsernameEditError('用户名不能为空');
+        return;
+    }
+    if (newUsername.trim() === userProfile.username) {
+         setIsEditingUsername(false); // 用户名未改变，退出编辑模式
+         return;
+    }
+
+    setActionLoading(true); // 设置操作加载状态
+    setUsernameEditError('');
+
+    try {
+        const res = await fetch('/api/user/updateUsername', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ newUsername: newUsername.trim() }),
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            showToast('用户名更新成功！');
+            // 更新页面上的用户名
+            setUserProfile(prev => ({ ...prev, username: newUsername.trim() }));
+            setIsEditingUsername(false);
+        } else {
+            // 显示后端返回的错误消息
+            setUsernameEditError(data.message || '用户名更新失败');
+            showToast('用户名更新失败: ' + (data.message || ''));
+        }
+
+    } catch (error) {
+        console.error('更新用户名请求失败:', error);
+        setUsernameEditError('网络或服务器错误，请稍后重试。');
+        showToast('用户名更新失败，请稍后重试');
+    } finally {
+        setActionLoading(false); // 结束操作加载状态
+    }
+  };
+
   if (loading) {
     return (
       <Layout>
@@ -323,6 +317,13 @@ export default function MyProfile() {
 
       <div className={`${userModeStyles.container} ${userModeStyles.variableContainer}`}> 
 
+        {/* 返回主页链接 */}
+        <div className={userModeStyles.backLinkContainer}> {/* 添加一个容器 div */}
+          <Link href="/posts/user_mode" className={userModeStyles.backLink}> {/* 指向主页，根据你的实际主页路径调整 */}
+            ← 返回主页
+          </Link>
+        </div>
+
         <main className={userModeStyles.mainContent}> 
 
           <div className={userModeStyles.profileContent}> 
@@ -333,25 +334,34 @@ export default function MyProfile() {
                 <div className={userModeStyles.profileAvatar}> 
                   {userProfile.username?.charAt(0)}
                 </div>
-                <div className={userModeStyles.profileInfo}> 
-                  <h1 className={userModeStyles.userName}> 
-                    {userProfile.username}
-                  </h1>
-                   <div className={userModeStyles.infoBlock}> 
-                     等级：{userProfile.level_name}（{userProfile.level}）
-                   </div>
-                    <div className={userModeStyles.infoBlock}> 
-                     经验值：{userProfile.experience}
-                   </div>
-                   <div className={userModeStyles.infoBlock}> 
-                     专业：{userProfile.major || '未填写'}
-                   </div>
-                    <div className={userModeStyles.infoBlock}> 
-                     学号: {userProfile.student_id}
-                   </div>
-                    <div className={userModeStyles.infoBlock}> 
-                     注册时间: {formatDate(userProfile.registration_date)}
-                   </div>
+                {/* 用户名显示和编辑区域 */}
+                <div className={userModeStyles.usernameArea}> {/* 添加一个容器 div */}
+                   {isEditingUsername ? (
+                     <div className={userModeStyles.editUsernameInput}> {/* 编辑状态的容器 */}
+                       <input
+                         type="text"
+                         value={newUsername}
+                         onChange={handleNewUsernameChange}
+                         disabled={actionLoading}
+                         className={userModeStyles.inputField}
+                       />
+                       {/* 按钮容器 */}
+                       <div className={userModeStyles.editActionsContainer}> 
+                         <button onClick={handleSaveUsername} disabled={actionLoading} className={userModeStyles.editActionButton}>保存</button>
+                         <button onClick={handleCancelEditUsername} disabled={actionLoading} className={userModeStyles.editActionButton}>取消</button>
+                       </div>
+                       {usernameEditError && <p className={userModeStyles.errorMessage}>{usernameEditError}</p>}
+                     </div>
+                   ) : (
+                     <div className={userModeStyles.displayUsername}> {/* 显示状态的容器 */}
+                        <h2 className={utilStyles.headingLg}>{userProfile.username}</h2>
+                        {/* 编辑按钮，只有在非编辑状态且非加载状态下显示 */}
+                        {!actionLoading && (
+                           <button onClick={handleEditUsernameClick} className={userModeStyles.editActionButton}>编辑</button>
+                        )}
+                     </div>
+                   )}
+
                 </div>
               </div>
 
@@ -380,7 +390,7 @@ export default function MyProfile() {
               </div>
 
               <div className={userModeStyles.profileActions}> 
-                    <button onClick={() => setShowVisibilityModal(true)} className={userModeStyles.listViewButton}> 
+                    <button onClick={() => router.push('/user/settings')} className={userModeStyles.listViewButton}> 
                         可见性设置
                     </button>
                 </div>
@@ -446,16 +456,6 @@ export default function MyProfile() {
                title={listModalTitle}
                data={listModalData}
                onUserClick={handleUserClick}
-           />
-       )}
-
-       {showVisibilityModal && currentUser && (
-           <VisibilitySettingsModal
-               isOpen={showVisibilityModal}
-               onClose={() => setShowVisibilityModal(false)}
-               settings={visibilitySettings}
-               onSave={handleSaveVisibilitySettings}
-               visibilityFields={visibilityFields}
            />
        )}
 

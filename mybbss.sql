@@ -10,7 +10,7 @@ Target Server Type    : MYSQL
 Target Server Version : 80019
 File Encoding         : 65001
 
-Date: 2025-05-30 20:49:52
+Date: 2025-05-31 16:16:02
 */
 
 SET FOREIGN_KEY_CHECKS=0;
@@ -20,12 +20,12 @@ SET FOREIGN_KEY_CHECKS=0;
 -- ----------------------------
 DROP TABLE IF EXISTS `belonging_to`;
 CREATE TABLE `belonging_to` (
-  `section_id` bigint NOT NULL,
+  `section_id` int unsigned NOT NULL,
   `post_id` bigint NOT NULL,
   PRIMARY KEY (`section_id`,`post_id`),
   KEY `fk_belong_post` (`post_id`),
   CONSTRAINT `fk_belong_post` FOREIGN KEY (`post_id`) REFERENCES `post` (`post_id`),
-  CONSTRAINT `fk_belong_section` FOREIGN KEY (`section_id`) REFERENCES `section` (`section_id`)
+  CONSTRAINT `fk_belong_section` FOREIGN KEY (`section_id`) REFERENCES `section` (`section_id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------
@@ -35,6 +35,7 @@ INSERT INTO `belonging_to` VALUES ('1', '4');
 INSERT INTO `belonging_to` VALUES ('2', '12');
 INSERT INTO `belonging_to` VALUES ('1', '13');
 INSERT INTO `belonging_to` VALUES ('5', '14');
+INSERT INTO `belonging_to` VALUES ('5', '16');
 
 -- ----------------------------
 -- Table structure for `blockrelation`
@@ -79,14 +80,15 @@ CREATE TABLE `comment` (
   `post_id` bigint NOT NULL,
   `content` text,
   `create_at` datetime DEFAULT NULL,
-  `parent_comment_id` bigint NULL,
+  `parent_comment_id` bigint DEFAULT NULL,
   PRIMARY KEY (`comment_id`),
   KEY `fk_comment_user` (`user_id`),
   KEY `fk_comment_post` (`post_id`),
+  KEY `fk_comment_parent` (`parent_comment_id`),
+  CONSTRAINT `fk_comment_parent` FOREIGN KEY (`parent_comment_id`) REFERENCES `comment` (`comment_id`) ON DELETE SET NULL,
   CONSTRAINT `fk_comment_post` FOREIGN KEY (`post_id`) REFERENCES `post` (`post_id`),
-  CONSTRAINT `fk_comment_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`),
-  CONSTRAINT `fk_comment_parent` FOREIGN KEY (`parent_comment_id`) REFERENCES `comment` (`comment_id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  CONSTRAINT `fk_comment_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------
 -- Records of comment
@@ -97,6 +99,13 @@ INSERT INTO `comment` VALUES ('6', '2', '13', '支持密码事业蓬勃发展！
 INSERT INTO `comment` VALUES ('7', '4', '13', '你是谁？', '2025-05-30 01:43:09', null);
 INSERT INTO `comment` VALUES ('9', '4', '12', '蒸蒸日上！', '2025-05-30 20:29:23', null);
 INSERT INTO `comment` VALUES ('10', '5', '2', '支持管理员！', '2025-05-30 20:41:02', null);
+INSERT INTO `comment` VALUES ('11', '5', '2', '你也是回复上了', '2025-05-30 21:15:15', '1');
+INSERT INTO `comment` VALUES ('12', '5', '14', '我想要！', '2025-05-30 21:22:54', null);
+INSERT INTO `comment` VALUES ('14', '4', '14', 'hhhei', '2025-05-31 01:27:38', '12');
+INSERT INTO `comment` VALUES ('15', '4', '13', 'ttt!', '2025-05-31 01:28:21', '6');
+INSERT INTO `comment` VALUES ('16', '4', '2', '嘻嘻嘻', '2025-05-31 01:39:17', '11');
+INSERT INTO `comment` VALUES ('17', '4', '2', '请为', '2025-05-31 01:48:10', '11');
+INSERT INTO `comment` VALUES ('18', '4', '16', '顿顿求题', '2025-05-31 15:28:46', null);
 
 -- ----------------------------
 -- Table structure for `followrelation`
@@ -112,6 +121,9 @@ CREATE TABLE `followrelation` (
 -- ----------------------------
 -- Records of followrelation
 -- ----------------------------
+INSERT INTO `followrelation` VALUES ('3', '4', null);
+INSERT INTO `followrelation` VALUES ('3', '5', null);
+INSERT INTO `followrelation` VALUES ('4', '3', null);
 INSERT INTO `followrelation` VALUES ('4', '5', null);
 INSERT INTO `followrelation` VALUES ('5', '4', null);
 
@@ -169,9 +181,10 @@ CREATE TABLE `likes` (
   `target_id` bigint DEFAULT NULL,
   `create_at` datetime DEFAULT NULL,
   PRIMARY KEY (`like_id`),
+  UNIQUE KEY `uk_user_target` (`user_id`,`target_type`,`target_id`),
   KEY `fk_like_user` (`user_id`),
   CONSTRAINT `fk_like_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=56 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=103 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------
 -- Records of likes
@@ -179,14 +192,21 @@ CREATE TABLE `likes` (
 INSERT INTO `likes` VALUES ('15', '3', 'post', '4', '2025-05-28 10:46:04');
 INSERT INTO `likes` VALUES ('17', '3', 'post', '2', '2025-05-28 10:49:33');
 INSERT INTO `likes` VALUES ('29', '5', 'post', '4', '2025-05-29 16:54:10');
-INSERT INTO `likes` VALUES ('34', '5', 'post', '13', '2025-05-29 19:01:54');
 INSERT INTO `likes` VALUES ('47', '4', 'comment', '6', '2025-05-30 09:27:14');
-INSERT INTO `likes` VALUES ('48', '4', 'post', '13', '2025-05-30 09:27:17');
 INSERT INTO `likes` VALUES ('50', '4', 'post', '4', '2025-05-30 09:32:03');
-INSERT INTO `likes` VALUES ('51', '4', 'post', '14', '2025-05-30 09:33:52');
 INSERT INTO `likes` VALUES ('52', '4', 'post', '2', '2025-05-30 17:55:21');
 INSERT INTO `likes` VALUES ('53', '4', 'comment', '1', '2025-05-30 17:55:25');
 INSERT INTO `likes` VALUES ('55', '5', 'post', '2', '2025-05-30 20:40:50');
+INSERT INTO `likes` VALUES ('56', '5', 'post', '12', '2025-05-30 21:22:36');
+INSERT INTO `likes` VALUES ('57', '5', 'post', '13', '2025-05-30 21:22:39');
+INSERT INTO `likes` VALUES ('59', '3', 'post', '13', '2025-05-30 21:35:21');
+INSERT INTO `likes` VALUES ('60', '3', 'comment', '12', '2025-05-30 22:02:39');
+INSERT INTO `likes` VALUES ('73', '3', 'post', '16', '2025-05-31 14:23:01');
+INSERT INTO `likes` VALUES ('81', '4', 'post', '12', '2025-05-31 14:59:21');
+INSERT INTO `likes` VALUES ('86', '4', 'post', '13', '2025-05-31 15:21:42');
+INSERT INTO `likes` VALUES ('100', '4', 'post', '16', '2025-05-31 15:51:35');
+INSERT INTO `likes` VALUES ('101', '4', 'comment', '18', '2025-05-31 15:51:38');
+INSERT INTO `likes` VALUES ('102', '4', 'post', '14', '2025-05-31 15:56:48');
 
 -- ----------------------------
 -- Table structure for `post`
@@ -202,7 +222,7 @@ CREATE TABLE `post` (
   PRIMARY KEY (`post_id`),
   KEY `fk_post_user` (`user_id`),
   CONSTRAINT `fk_post_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------
 -- Records of post
@@ -212,6 +232,7 @@ INSERT INTO `post` VALUES ('4', '4', 'qwe', 'sda', '2025-05-27 22:50:47', '2025-
 INSERT INTO `post` VALUES ('12', '5', '计科', '南开大学计算机学院', '2025-05-29 16:15:31', '2025-05-29 16:15:31');
 INSERT INTO `post` VALUES ('13', '5', '123', '南开大学密码与网络空间安全学院', '2025-05-29 17:04:43', '2025-05-29 17:04:43');
 INSERT INTO `post` VALUES ('14', '4', '出书！', '有朋友想买书吗？价格便宜，后台私信我！', '2025-05-30 09:23:34', '2025-05-30 09:23:34');
+INSERT INTO `post` VALUES ('16', '3', '出复习资料', '毛概马原资料，价格可议！', '2025-05-31 13:38:33', '2025-05-31 13:38:33');
 
 -- ----------------------------
 -- Table structure for `profilevisibility`
@@ -219,33 +240,55 @@ INSERT INTO `post` VALUES ('14', '4', '出书！', '有朋友想买书吗？价�
 DROP TABLE IF EXISTS `profilevisibility`;
 CREATE TABLE `profilevisibility` (
   `field_name` varchar(255) NOT NULL,
-  `user_id` bigint DEFAULT NULL,
+  `user_id` bigint NOT NULL,
   `visible_to_admin_only` tinyint(1) DEFAULT NULL,
   `visible_to_followers_only` tinyint(1) DEFAULT NULL,
   `visible_to_all` tinyint(1) DEFAULT NULL,
-  PRIMARY KEY (`field_name`),
+  PRIMARY KEY (`user_id`,`field_name`),
   KEY `fk_visibility_user` (`user_id`),
+  KEY `idx_field_name` (`field_name`),
   CONSTRAINT `fk_visibility_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------
 -- Records of profilevisibility
 -- ----------------------------
+INSERT INTO `profilevisibility` VALUES ('blocked_list', '4', '0', '0', '1');
+INSERT INTO `profilevisibility` VALUES ('experience', '4', '0', '0', '1');
+INSERT INTO `profilevisibility` VALUES ('followers_list', '4', '0', '0', '1');
+INSERT INTO `profilevisibility` VALUES ('following_list', '4', '0', '0', '1');
+INSERT INTO `profilevisibility` VALUES ('level', '4', '0', '0', '1');
+INSERT INTO `profilevisibility` VALUES ('major', '4', '0', '0', '1');
+INSERT INTO `profilevisibility` VALUES ('profileBase', '4', '0', '0', '1');
 INSERT INTO `profilevisibility` VALUES ('recent_posts', '4', '0', '0', '1');
+INSERT INTO `profilevisibility` VALUES ('registrationDate', '4', '0', '0', '1');
+INSERT INTO `profilevisibility` VALUES ('stats', '4', '0', '0', '1');
+INSERT INTO `profilevisibility` VALUES ('studentId', '4', '0', '0', '1');
+INSERT INTO `profilevisibility` VALUES ('blocked_list', '5', '0', '0', '1');
+INSERT INTO `profilevisibility` VALUES ('experience', '5', '0', '0', '1');
+INSERT INTO `profilevisibility` VALUES ('followers_list', '5', '0', '0', '1');
+INSERT INTO `profilevisibility` VALUES ('following_list', '5', '0', '0', '1');
+INSERT INTO `profilevisibility` VALUES ('level', '5', '0', '0', '1');
+INSERT INTO `profilevisibility` VALUES ('major', '5', '0', '1', '0');
+INSERT INTO `profilevisibility` VALUES ('profileBase', '5', '0', '0', '1');
+INSERT INTO `profilevisibility` VALUES ('recent_posts', '5', '0', '0', '1');
+INSERT INTO `profilevisibility` VALUES ('registrationDate', '5', '0', '0', '1');
+INSERT INTO `profilevisibility` VALUES ('stats', '5', '0', '0', '1');
+INSERT INTO `profilevisibility` VALUES ('studentId', '5', '0', '1', '0');
 
 -- ----------------------------
 -- Table structure for `section`
 -- ----------------------------
 DROP TABLE IF EXISTS `section`;
 CREATE TABLE `section` (
-  `section_id` bigint NOT NULL,
+  `section_id` int unsigned NOT NULL AUTO_INCREMENT,
   `user_id` bigint DEFAULT NULL,
   `section_name` varchar(255) DEFAULT NULL,
   `description` text,
   PRIMARY KEY (`section_id`),
   KEY `fk_section_creator` (`user_id`),
   CONSTRAINT `fk_section_creator` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------
 -- Records of section
@@ -255,6 +298,7 @@ INSERT INTO `section` VALUES ('2', null, '学术交流', '讨论学术问题、�
 INSERT INTO `section` VALUES ('3', null, '社团活动', '发布社团活动信息、招新和活动回顾');
 INSERT INTO `section` VALUES ('4', null, '失物招领', '发布校园内丢失和拾获物品的信息');
 INSERT INTO `section` VALUES ('5', null, '二手交易', '发布二手物品交易信息');
+INSERT INTO `section` VALUES ('6', null, '情感交友', null);
 
 -- ----------------------------
 -- Table structure for `useridentity`
@@ -319,9 +363,155 @@ CREATE TABLE `users` (
 -- Records of users
 -- ----------------------------
 INSERT INTO `users` VALUES ('2', null, '1', null, 'fdsa', null, '8909-0-9', '0', '1', '0', '0', '0', '0');
-INSERT INTO `users` VALUES ('3', null, '1', '2131421', 'ALM', 'Computer Science', 'qpalz,da', '0', '1', '0', '0', '0', '0');
-INSERT INTO `users` VALUES ('4', null, '1', '134452', 'Pity', 'Finance', '10erosf', '3', '1', '0', '0', '0', '0');
-INSERT INTO `users` VALUES ('5', null, '1', '2311100', '2311100', '物联网', '123456', '2', '1', '0', '0', '0', '0');
+INSERT INTO `users` VALUES ('3', null, '2', '2131421', 'ALM', 'Computer Science', 'qpalz,da', '104', '1', '2', '1', '0', '0');
+INSERT INTO `users` VALUES ('4', null, '1', '134452', 'Pity', 'Finance', '10erosf', '18', '1', '1', '1', '0', '0');
+INSERT INTO `users` VALUES ('5', null, '1', '2311100', '2311100', '物联网', '123456', '2', '1', '0', '1', '0', '0');
+
+-- ----------------------------
+-- Procedure structure for `sp_save_profile_visibility`
+-- ----------------------------
+DROP PROCEDURE IF EXISTS `sp_save_profile_visibility`;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_save_profile_visibility`(
+    IN p_user_id BIGINT,
+    IN p_field_name VARCHAR(255),
+    IN p_visible_to_admin_only TINYINT(1),
+    IN p_visible_to_followers_only TINYINT(1),
+    IN p_visible_to_all TINYINT(1)
+)
+BEGIN
+    INSERT INTO `profilevisibility` (`user_id`, `field_name`, `visible_to_admin_only`, `visible_to_followers_only`, `visible_to_all`)
+    VALUES (p_user_id, p_field_name, p_visible_to_admin_only, p_visible_to_followers_only, p_visible_to_all)
+    ON DUPLICATE KEY UPDATE
+        `visible_to_admin_only` = p_visible_to_admin_only,
+        `visible_to_followers_only` = p_visible_to_followers_only,
+        `visible_to_all` = p_visible_to_all;
+END
+;;
+DELIMITER ;
+
+-- ----------------------------
+-- Procedure structure for `sp_toggle_like`
+-- ----------------------------
+DROP PROCEDURE IF EXISTS `sp_toggle_like`;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_toggle_like`(
+    IN p_user_id BIGINT,
+    IN p_target_type ENUM('post','comment'),
+    IN p_target_id BIGINT
+)
+BEGIN
+    -- Check if already liked
+    IF EXISTS (SELECT 1 FROM `likes` WHERE `user_id` = p_user_id AND `target_type` = p_target_type AND `target_id` = p_target_id) THEN
+        -- If liked, delete the like record (unlike)
+        DELETE FROM `likes`
+        WHERE `user_id` = p_user_id
+          AND `target_type` = p_target_type
+          AND `target_id` = p_target_id;
+    ELSE
+        -- If not liked, insert new like record
+        INSERT INTO `likes` (`user_id`, `target_type`, `target_id`, `create_at`)
+        VALUES (p_user_id, p_target_type, p_target_id, NOW());
+    END IF;
+END
+;;
+DELIMITER ;
+
+-- ----------------------------
+-- Procedure structure for `toggle_like`
+-- ----------------------------
+DROP PROCEDURE IF EXISTS `toggle_like`;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `toggle_like`(
+    IN p_user_id BIGINT,         -- The user performing the like/unlike action
+    IN p_target_type ENUM('post','comment'), -- The type of item being liked
+    IN p_target_id BIGINT        -- The ID of the item being liked
+)
+BEGIN
+    DECLARE v_exists INT;
+    DECLARE v_author_id BIGINT; -- Variable to store the author's user ID
+    DECLARE v_author_current_exp BIGINT; -- Variable to store the author's current experience
+    DECLARE v_author_current_level_id BIGINT; -- Variable to store the author's current level ID
+    DECLARE v_new_level_id BIGINT; -- Variable to store the potential new level ID
+
+    -- Check if already liked by the user performing the action (p_user_id)
+    SELECT COUNT(*) INTO v_exists
+    FROM likes
+    WHERE user_id = p_user_id
+    AND target_type = p_target_type
+    AND target_id = p_target_id;
+
+    IF v_exists > 0 THEN
+        -- Unlike: Delete the like record
+        DELETE FROM likes
+        WHERE user_id = p_user_id
+          AND target_type = p_target_type
+          AND target_id = p_target_id;
+
+        -- Find the author's user ID based on the target type (Same logic as in ELSE branch)
+        IF p_target_type = 'post' THEN
+            SELECT user_id INTO v_author_id FROM post WHERE post_id = p_target_id LIMIT 1;
+        ELSEIF p_target_type = 'comment' THEN
+            SELECT user_id INTO v_author_id FROM comment WHERE comment_id = p_target_id LIMIT 1;
+        END IF;
+
+        -- If the author's user ID is found and is not NULL
+        IF v_author_id IS NOT NULL THEN
+            -- Decrease the author's experience (ensure experience doesn't go below 0)
+            UPDATE users SET experience = GREATEST(0, experience - 1) WHERE user_id = v_author_id;
+
+            -- Get the author's current experience and level after update
+            SELECT experience, level_id INTO v_author_current_exp, v_author_current_level_id FROM users WHERE user_id = v_author_id;
+
+            -- Check if the author's level needs to be updated (potentially decreased)
+            -- Find the highest level ID the author's current experience qualifies for
+            SELECT MAX(level_id) INTO v_new_level_id
+            FROM levelrule
+            WHERE min_exp <= v_author_current_exp;
+
+            -- If a new level ID is found, and it's different from the author's current level, update the author's level
+            -- (This handles both level up and level down)
+            IF v_new_level_id IS NOT NULL AND v_new_level_id <> v_author_current_level_id THEN
+                UPDATE users SET level_id = v_new_level_id WHERE user_id = v_author_id;
+            END IF;
+        END IF;
+
+    ELSE
+        -- Add like: Insert the new like record
+        INSERT INTO likes (user_id, target_type, target_id, create_at)
+        VALUES (p_user_id, p_target_type, p_target_id, NOW());
+
+        -- Find the author's user ID based on the target type
+        IF p_target_type = 'post' THEN
+            SELECT user_id INTO v_author_id FROM post WHERE post_id = p_target_id LIMIT 1;
+        ELSEIF p_target_type = 'comment' THEN
+            SELECT user_id INTO v_author_id FROM comment WHERE comment_id = p_target_id LIMIT 1;
+        END IF;
+
+        -- If the author's user ID is found and is not NULL
+        IF v_author_id IS NOT NULL THEN
+            -- Increase the author's experience (e.g., author gains 1 experience per like)
+            UPDATE users SET experience = experience + 1 WHERE user_id = v_author_id;
+
+            -- Get the author's current experience and level after update
+            SELECT experience, level_id INTO v_author_current_exp, v_author_current_level_id FROM users WHERE user_id = v_author_id;
+
+            -- Check if the author meets the requirement for a new level (only level up in this branch)
+            -- Find the highest level ID the author's current experience qualifies for
+            SELECT MAX(level_id) INTO v_new_level_id
+            FROM levelrule
+            WHERE min_exp <= v_author_current_exp;
+
+            -- If a new level ID is found, and it's higher than the author's current level, update the author's level
+            IF v_new_level_id IS NOT NULL AND v_new_level_id > v_author_current_level_id THEN
+                UPDATE users SET level_id = v_new_level_id WHERE user_id = v_author_id;
+            END IF;
+        END IF;
+
+    END IF;
+END
+;;
+DELIMITER ;
 DROP TRIGGER IF EXISTS `check_unique_user_info`;
 DELIMITER ;;
 CREATE TRIGGER `check_unique_user_info` BEFORE INSERT ON `users` FOR EACH ROW BEGIN
@@ -359,4 +549,28 @@ END
 ;;
 DELIMITER ;
 
-SET FOREIGN_KEY_CHECKS=1;
+-- ----------------------------
+-- View structure for `post_details_view`
+-- ----------------------------
+DROP VIEW IF EXISTS `post_details_view`;
+CREATE VIEW `post_details_view` AS
+SELECT
+    p.post_id,
+    p.user_id,
+    p.title,
+    p.content,
+    p.create_at,
+    p.post_time,
+    u.username AS author_username,
+    s.section_id,
+    s.section_name,
+    (SELECT COUNT(*) FROM comment c WHERE c.post_id = p.post_id) AS comment_count,
+    (SELECT COUNT(*) FROM likes l WHERE l.target_type = 'post' AND l.target_id = p.post_id) AS like_count
+FROM
+    post p
+JOIN
+    users u ON p.user_id = u.user_id
+LEFT JOIN
+    belonging_to bt ON p.post_id = bt.post_id
+LEFT JOIN
+    section s ON bt.section_id = s.section_id;

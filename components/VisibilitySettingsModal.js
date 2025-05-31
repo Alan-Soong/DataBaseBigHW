@@ -7,10 +7,34 @@ export default function VisibilitySettingsModal({ isOpen, onClose, settings, onS
 
   useEffect(() => {
     // Initialize editedSettings when modal opens or settings change
-    if (isOpen) {
-      setEditedSettings(settings);
+    if (isOpen && settings) { // Ensure settings is available
+      const initialSettings = {};
+      visibilityFields.forEach(field => {
+        const userSetting = settings[field.name];
+        initialSettings[field.name] = userSetting ? { // Use existing setting if available
+          visibleToAdminOnly: userSetting.visibleToAdminOnly || false,
+          visibleToFollowersOnly: userSetting.visibleToFollowersOnly || false,
+          visibleToAll: userSetting.visibleToAll || false, // Default to false if not set
+        } : { // Provide default settings if no user setting found for the field
+          visibleToAdminOnly: false,
+          visibleToFollowersOnly: false,
+          visibleToAll: true, // Default to visible to all
+        };
+      });
+      setEditedSettings(initialSettings);
+    } else if (isOpen) { // If modal is open but settings are not yet loaded
+        // Optionally initialize with all fields visible to all as a fallback
+         const defaultSettings = {};
+         visibilityFields.forEach(field => {
+             defaultSettings[field.name] = {
+                 visibleToAdminOnly: false,
+                 visibleToFollowersOnly: false,
+                 visibleToAll: true,
+             };
+         });
+         setEditedSettings(defaultSettings);
     }
-  }, [isOpen, settings]);
+  }, [isOpen, settings, visibilityFields]); // Added visibilityFields to dependencies
 
   if (!isOpen) return null;
 
@@ -49,7 +73,7 @@ export default function VisibilitySettingsModal({ isOpen, onClose, settings, onS
                     <input
                       type="radio"
                       value="all"
-                      checked={editedSettings[field.name]?.visibleToAll}
+                      checked={editedSettings[field.name]?.visibleToAll === true}
                       onChange={() => handleSettingChange(field.name, 'all')}
                       disabled={saving}
                     />
@@ -60,7 +84,7 @@ export default function VisibilitySettingsModal({ isOpen, onClose, settings, onS
                        <input
                          type="radio"
                          value="followers"
-                         checked={editedSettings[field.name]?.visibleToFollowersOnly}
+                         checked={editedSettings[field.name]?.visibleToFollowersOnly === true}
                          onChange={() => handleSettingChange(field.name, 'followers')}
                          disabled={saving}
                        />
@@ -71,7 +95,7 @@ export default function VisibilitySettingsModal({ isOpen, onClose, settings, onS
                      <input
                        type="radio"
                        value="admin"
-                       checked={editedSettings[field.name]?.visibleToAdminOnly}
+                       checked={editedSettings[field.name]?.visibleToAdminOnly === true}
                        onChange={() => handleSettingChange(field.name, 'admin')}
                        disabled={saving}
                      />

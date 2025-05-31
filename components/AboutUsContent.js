@@ -58,11 +58,11 @@ export default function AboutUsContent() {
             <p>
               喜欢的朋友们可以移步我的{' '}
               <a
-                href="https://github.com/your-username"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={styles.sidebarMenuLink}
-              >
+                  href="https://github.com/Alan-Soong"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.sidebarMenuLink}
+                >
                 Github 主页
               </a>
               ，点个 star 哦~
@@ -71,7 +71,7 @@ export default function AboutUsContent() {
               <button
                 className={styles.button}
                 onClick={() =>
-                  window.open('https://github.com/your-username', '_blank')
+                  window.open('https://github.com/Alan-Soong', '_blank')
                 }
               >
                 访问 Github
@@ -97,7 +97,7 @@ export default function AboutUsContent() {
               <button
                 className={styles.button}
                 onClick={() =>
-                  window.open('https://github.com/your-username', '_blank')
+                  window.open('https://github.com/Alan-Soong', '_blank')
                 }
               >
                 查看源码
@@ -110,17 +110,17 @@ export default function AboutUsContent() {
             <h1 className={styles.postTitle}>联系方式</h1>
             <p>有任何问题或建议？可以通过以下方式联系我，或者点击下方按钮发送消息。</p>
             <ul className={styles.list}>
-              <li className={styles.listItem}>Email: example@nankai.edu.cn</li>
-              <li className={styles.listItem}>WeChat: your-wechat-id</li>
+              <li className={styles.listItem}>Email: 2311095@mail.nankai.edu.cn</li>
+              <li className={styles.listItem}>WeChat: kendejifengkuangxingqisivivo50</li>
               <li className={styles.listItem}>
                 Github:{' '}
                 <a
-                  href="https://github.com/your-username"
+                  href="https://github.com/Alan-Soong"
                   target="_blank"
                   rel="noopener noreferrer"
                   className={styles.sidebarMenuLink}
                 >
-                  your-username
+                  Alan-Soong
                 </a>
               </li>
             </ul>

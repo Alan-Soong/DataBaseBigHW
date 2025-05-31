@@ -1,0 +1,96 @@
+/* styles/Login.module.css */
+
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh; /* 确保在页面内容较少时也能垂直居中 */
+  background-color: #f0f2f5; /* 使用一个浅灰色背景 */
+  padding: 20px;
+}
+
+.loginBox {
+  background-color: #ffffff; /* 白色背景 */
+  padding: 40px;
+  border-radius: 10px; /* 圆角 */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); /* 阴影 */
+  width: 100%;
+  max-width: 400px; /* 最大宽度 */
+  text-align: center;
+}
+
+.title {
+  font-size: 2rem; /* 标题大小 */
+  margin-bottom: 30px;
+  color: #333; /* 文字颜色 */
+}
+
+.formGroup {
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: #555;
+}
+
+.input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 1rem;
+  box-sizing: border-box; /* 确保padding不会增加宽度 */
+}
+
+.input:focus {
+  outline: none;
+  border-color: #007bff; /* 聚焦时边框颜色 */
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.25);
+}
+
+.error {
+  color: #dc3545; /* 错误信息颜色 */
+  margin-top: 10px;
+  margin-bottom: 20px;
+  font-size: 0.9rem;
+}
+
+.button {
+  width: 100%;
+  padding: 12px;
+  background-color: #007bff; /* 按钮背景颜色 */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.button:hover {
+  background-color: #0056b3;
+}
+
+.button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.switchLink {
+  margin-top: 20px;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.switchLink a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.switchLink a:hover {
+  text-decoration: underline;
+} 
