@@ -16,6 +16,12 @@ export default function Home() {
   const [showLogin, setShowLogin] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
 
+  // 处理注册成功，关闭注册模态框，打开登录模态框
+  const handleRegistrationSuccess = () => {
+    setShowRegister(false); // 关闭注册模态框
+    setShowLogin(true); // 打开登录模态框
+  };
+
   return (
     <Layout home>
       <Head>
@@ -53,7 +59,11 @@ export default function Home() {
         </div>
       </section>
 
-      <RegisterModal isOpen={showRegister} onClose={() => setShowRegister(false)} />
+      <RegisterModal
+        isOpen={showRegister}
+        onClose={() => setShowRegister(false)}
+        onRegistrationSuccess={handleRegistrationSuccess} // 传递注册成功处理函数
+      />
       <LoginModal isOpen={showLogin} onClose={() => setShowLogin(false)} />
       <AdminModal isOpen={isModalOpen} onClose={closeModal} />
     </Layout>

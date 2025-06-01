@@ -289,6 +289,44 @@ export default function MyProfile() {
     }
   };
 
+  const handleDeleteUser = async () => {
+    if (!currentUser || !confirm('确定要注销该用户吗？此操作不可撤销，将删除您的所有帖子、评论、点赞、关注、粉丝等相关数据。')) {
+      return;
+    }
+
+    setActionLoading(true); // 设置操作加载状态
+
+    try {
+      const res = await fetch('/api/user/deleteUser', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: currentUser.user_id
+        })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        showToast('用户注销成功');
+        // 清除客户端的用户状态
+        setCurrentUser(null);
+        setUserProfile(null);
+        // 清除 session/localStorage 中的登录信息（如果使用了）
+        sessionStorage.removeItem('currentUser');
+        sessionStorage.removeItem('username');
+        // 重定向到首页或登录页
+        router.push('/'); // 或 '/auth/login'
+      } else {
+        showToast('用户注销失败: ' + (data.message || ''));
+      }
+    } catch (error) {
+      console.error('注销用户失败:', error);
+      showToast('注销用户失败，请稍后重试');
+    } finally {
+      setActionLoading(false); // 结束操作加载状态
+    }
+  };
+
   if (loading) {
     return (
       <Layout>
@@ -316,13 +354,6 @@ export default function MyProfile() {
       <Head><title>我的个人主页 - {userProfile.username}</title></Head>
 
       <div className={`${userModeStyles.container} ${userModeStyles.variableContainer}`}> 
-
-        {/* 返回主页链接 */}
-        <div className={userModeStyles.backLinkContainer}> {/* 添加一个容器 div */}
-          <Link href="/posts/user_mode" className={userModeStyles.backLink}> {/* 指向主页，根据你的实际主页路径调整 */}
-            ← 返回主页
-          </Link>
-        </div>
 
         <main className={userModeStyles.mainContent}> 
 
@@ -392,6 +423,13 @@ export default function MyProfile() {
               <div className={userModeStyles.profileActions}> 
                     <button onClick={() => router.push('/user/settings')} className={userModeStyles.listViewButton}> 
                         可见性设置
+                    </button>
+                    <button 
+                        className={`${userModeStyles.button} ${userModeStyles.dangerButton}`} 
+                        onClick={handleDeleteUser}
+                        disabled={actionLoading}
+                    >
+                        注销用户
                     </button>
                 </div>
 

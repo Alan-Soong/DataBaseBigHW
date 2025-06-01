@@ -4,6 +4,7 @@
   --primary-hover: #2980b9;
   --danger-color: #e74c3c; /* 危险红 */
   --danger-hover: #c0392b;
+  --success-color: #28a745; /* 成功绿 */
   --text-color: #333; /* 主要文字颜色 */
   --text-light: #555; /* 较浅文字颜色 */
   --text-lighter: #777; /* 更浅文字颜色 */
@@ -24,6 +25,16 @@
   background-color: rgba(var(--danger-color), 0.1); /* 使用变量并调整透明度 */
   border-radius: var(--border-radius);
   border-left: 3px solid var(--danger-color);
+}
+
+/* 成功消息样式 */
+.success {
+  color: var(--success-color);
+  margin-bottom: var(--spacing-medium);
+  padding: var(--spacing-small) var(--spacing-medium);
+  background-color: rgba(var(--success-color), 0.1); /* 使用变量并调整透明度 */
+  border-radius: var(--border-radius);
+  border-left: 3px solid var(--success-color);
 }
 
 /* 美化帖子卡片 */
@@ -250,14 +261,14 @@
 
 .button.secondaryButton {
   background-color: transparent; /* 透明背景 */
-  color: var(--text-light); /* 浅色文字 */
-  border: 1px solid var(--border-color); /* 边框颜色 */
+  color: var(--primary-color); /* 蓝色文字 */
+  border: 1px solid var(--primary-color); /* 蓝色边框 */
 }
 
 .button.secondaryButton:hover {
-  background-color: var(--bg-light); /* 浅背景 */
-  color: var(--text-color); /* 文字颜色 */
-  border-color: var(--text-color); /* 边框颜色 */
+  background-color: var(--primary-color); /* 悬停时蓝色背景 */
+  color: white; /* 悬停时白色文字 */
+  border-color: var(--primary-color); /* 悬停时蓝色边框 */
 }
 
 .button.smallButton {
@@ -380,22 +391,6 @@
 .submitButton:hover {
   background-color: var(--primary-hover);
   transform: translateY(-2px);
-}
-
-.cancelButton {
-  padding: var(--spacing-small) var(--spacing-large);
-  background-color: transparent;
-  color: var(--text-light);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  font-size: 1rem;
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.cancelButton:hover {
-  background-color: var(--bg-light);
-  color: var(--text-color);
 }
 
 /* 美化侧边栏 */
@@ -966,30 +961,46 @@
 }
 
 .dialogActions button {
+  /* 通用样式 */
   padding: 8px 15px;
-  border: none;
   border-radius: 4px;
   cursor: pointer;
   font-size: 14px;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.3s ease, opacity 0.3s ease; /* 添加 opacity 过渡 */
+  opacity: 1; /* 默认完全不透明 */
+  /* 移除通用边框，具体边框由下面类控制 */
 }
 
-.cancelButton {
-  background-color: var(--primary-color); /* 将背景色改为蓝色 */
-  color: white; /* 文字颜色改为白色 */
+.dialogActions button:hover {
+  opacity: 0.9; /* 悬停时稍微变透明 */
 }
 
-.cancelButton:hover {
-  background-color: var(--primary-hover); /* 悬停时使用主题色的hover效果 */
+/* 明确指定 Cancel 按钮在 dialogActions 内的样式 */
+.dialogActions .cancelButton {
+  background-color: #3498db !important; /* 蓝色背景 */
+  color: white !important; /* 白色文字 */
+  border: 1px solid #3498db !important; /* 添加蓝色边框 */
+  padding: 8px 15px !important; /* 确保 padding 应用 */
+  border-radius: 4px !important; /* 确保圆角应用 */
 }
 
-.confirmButton {
-  background-color: #d9534f; /* Red background for confirmation/danger action */
-  color: white;
+.dialogActions .cancelButton:hover {
+  background-color: #2980b9 !important; /* 悬停效果 */
+  border-color: #2980b9 !important; /* 悬停时边框变深 */
 }
 
-.confirmButton:hover {
-  background-color: #c9302c;
+/* 明确指定 Confirm 按钮在 dialogActions 内的样式 */
+.dialogActions .confirmButton {
+  background-color: #e74c3c !important; /* 红色背景 */
+  color: white !important; /* 白色文字 */
+  border: 1px solid #e74c3c !important; /* 添加红色边框 */
+    padding: 8px 15px !important; /* 确保 padding 应用 */
+  border-radius: 4px !important; /* 确保圆角应用 */
+}
+
+.dialogActions .confirmButton:hover {
+  background-color: #c0392b !important; /* 悬停效果 */
+  border-color: #c0392b !important; /* 悬停时边框变深 */
 }
 
 /* 返回顶部按钮样式 */

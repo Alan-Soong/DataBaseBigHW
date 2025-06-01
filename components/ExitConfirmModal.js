@@ -9,8 +9,8 @@ export default function ExitConfirmModal({ isOpen, onClose, onConfirm }) {
         <h3 className={styles.dialogTitle}>确认退出</h3>
         <p className={styles.dialogMessage}>您确定要退出论坛吗？</p>
         <div className={styles.dialogActions}>
-          <button onClick={onConfirm}>退出</button>
-          <button onClick={onClose}>取消</button>
+          <button onClick={onConfirm} className={styles.confirmButton}>退出</button>
+          <button onClick={onClose} className={styles.cancelButton}>取消</button>
         </div>
       </div>
     </div>

@@ -126,11 +126,13 @@ async function checkUserLikes(userId, posts = [], comments = []) {
 async function addLike(userId, targetType, targetId) {
   const connection = await getConnection();
   try {
-    // 使用存储过程处理点赞/取消点赞
+    // 调用存储过程来切换点赞状态和更新作者经验值/等级
     await connection.execute(
       'CALL toggle_like(?, ?, ?)',
       [userId, targetType, targetId]
     );
+
+    await connection.commit();
 
     // 查询最新点赞数
     const [countResult] = await connection.execute(
@@ -141,8 +143,8 @@ async function addLike(userId, targetType, targetId) {
     // 检查是否已点赞
     const [likeResult] = await connection.execute(
       'SELECT 1 FROM Likes WHERE user_id = ? AND target_type = ? AND target_id = ?',
-      [userId, targetType, targetId]
-    );
+        [userId, targetType, targetId]
+      );
 
     return { 
       success: true, 

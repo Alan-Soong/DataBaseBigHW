@@ -416,148 +416,148 @@ export default function AdminMode() {
                 频道管理
               </button>
             </div>
-          </div>
+        </div>
           
-          {activeTab === 'users' && (
+              {activeTab === 'users' && (
             <div className={userModeStyles.postCard}>
               <h2 className={userModeStyles.postCardTitle}>用户列表</h2>
               {actionLoading && <p>操作进行中...</p>}
               <table className={utilStyles.table}>
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>用户名</th>
+                      <thead>
+                        <tr>
+                          <th>ID</th>
+                          <th>用户名</th>
                     {!hiddenUserColumns['create_at'] && <th>注册时间</th>}
                     <th>是否管理员</th>
-                    <th>操作</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.length === 0 ? (
-                    <tr>
+                          <th>操作</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {users.length === 0 ? (
+                          <tr>
                       <td colSpan={5 - Object.keys(hiddenUserColumns).length} style={{ textAlign: 'center' }}>暂无用户数据</td>
-                    </tr>
-                  ) : (
-                    users.map(user => (
-                      <tr key={user.user_id}>
-                        <td>{user.user_id}</td>
+                          </tr>
+                        ) : (
+                          users.map(user => (
+                            <tr key={user.user_id}>
+                              <td>{user.user_id}</td>
                         <td><Link href={`/user/${user.user_id}`} className={userModeStyles.userLink}>{user.username}</Link></td>
                         {!hiddenUserColumns['create_at'] && <td>{formatDate(user.create_at)}</td>}
-                        <td>{user.is_admin ? '是' : '否'}</td>
+                              <td>{user.is_admin ? '是' : '否'}</td>
                         <td>
-                          <button 
-                            onClick={() => handleSetAdmin(user.user_id, !user.is_admin)}
-                            disabled={actionLoading}
+                                <button 
+                                  onClick={() => handleSetAdmin(user.user_id, !user.is_admin)}
+                                  disabled={actionLoading}
                             className={`${userModeStyles.button} ${userModeStyles.smallButton} ${userModeStyles.secondaryButton}`}
                             style={{ marginRight: '5px' }} 
-                          >
-                            {user.is_admin ? '取消管理员' : '设为管理员'}
-                          </button>
-                          <button 
-                            onClick={() => handleDeleteUser(user.user_id)}
-                            disabled={actionLoading}
+                                >
+                                  {user.is_admin ? '取消管理员' : '设为管理员'}
+                                </button>
+                                <button 
+                                  onClick={() => handleDeleteUser(user.user_id)}
+                                  disabled={actionLoading}
                             className={`${userModeStyles.button} ${userModeStyles.dangerButton} ${userModeStyles.smallButton}`} 
-                          >
-                            删除
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
-          
-          {activeTab === 'posts' && (
+                                >
+                                  删除
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                </div>
+              )}
+              
+              {activeTab === 'posts' && (
             <div className={userModeStyles.postCard}>
               <h2 className={userModeStyles.postCardTitle}>帖子列表</h2>
               {actionLoading && <p>操作进行中...</p>}
               <table className={utilStyles.table}>
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>标题</th>
-                    <th>作者</th>
-                    <th>发布时间</th>
-                    <th>操作</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {posts.length === 0 ? (
-                    <tr>
+                      <thead>
+                        <tr>
+                          <th>ID</th>
+                          <th>标题</th>
+                          <th>作者</th>
+                          <th>发布时间</th>
+                          <th>操作</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {posts.length === 0 ? (
+                          <tr>
                       <td colSpan="5" style={{ textAlign: 'center' }}>暂无帖子数据</td>
-                    </tr>
-                  ) : (
-                    posts.map(post => (
-                      <tr key={post.post_id}>
-                        <td>{post.post_id}</td>
+                          </tr>
+                        ) : (
+                          posts.map(post => (
+                            <tr key={post.post_id}>
+                              <td>{post.post_id}</td>
                         <td><Link href={`/posts/${post.post_id}`} className={userModeStyles.userLink}>{post.title}</Link></td>
-                        <td>{post.username}</td>
-                        <td>{formatDate(post.post_time)}</td>
+                              <td>{post.username}</td>
+                              <td>{formatDate(post.post_time)}</td>
                         <td>
-                          <button 
-                            onClick={() => handleDeletePost(post.post_id)}
-                            disabled={actionLoading}
+                                <button 
+                                  onClick={() => handleDeletePost(post.post_id)}
+                                  disabled={actionLoading}
                             className={`${userModeStyles.button} ${userModeStyles.dangerButton} ${userModeStyles.smallButton}`} 
-                          >
-                            删除
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
-          
-          {activeTab === 'comments' && (
+                                >
+                                  删除
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                </div>
+              )}
+              
+              {activeTab === 'comments' && (
             <div className={userModeStyles.postCard}>
               <h2 className={userModeStyles.postCardTitle}>评论列表</h2>
               {actionLoading && <p>操作进行中...</p>}
               <table className={utilStyles.table}>
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>内容</th>
-                    <th>作者</th>
-                    <th>帖子ID</th>
-                    <th>发布时间</th>
-                    <th>操作</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {comments.length === 0 ? (
-                    <tr>
+                      <thead>
+                        <tr>
+                          <th>ID</th>
+                          <th>内容</th>
+                          <th>作者</th>
+                          <th>帖子ID</th>
+                          <th>发布时间</th>
+                          <th>操作</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {comments.length === 0 ? (
+                          <tr>
                       <td colSpan="6" style={{ textAlign: 'center' }}>暂无评论数据</td>
-                    </tr>
-                  ) : (
-                    comments.map(comment => (
-                      <tr key={comment.comment_id}>
-                        <td>{comment.comment_id}</td>
+                          </tr>
+                        ) : (
+                          comments.map(comment => (
+                            <tr key={comment.comment_id}>
+                              <td>{comment.comment_id}</td>
                         <td>{comment.content}</td>
-                        <td>{comment.username}</td>
+                              <td>{comment.username}</td>
                         <td><Link href={`/posts/${comment.post_id}`} className={userModeStyles.userLink}>{comment.post_id}</Link></td>
-                        <td>{formatDate(comment.create_at)}</td>
+                              <td>{formatDate(comment.create_at)}</td>
                         <td>
-                          <button 
-                            onClick={() => handleDeleteComment(comment.comment_id)}
-                            disabled={actionLoading}
+                                <button 
+                                  onClick={() => handleDeleteComment(comment.comment_id)}
+                                  disabled={actionLoading}
                             className={`${userModeStyles.button} ${userModeStyles.dangerButton} ${userModeStyles.smallButton}`} 
-                          >
-                            删除
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
-          
-          {activeTab === 'sections' && (
+                                >
+                                  删除
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                </div>
+              )}
+              
+              {activeTab === 'sections' && (
             <div className={userModeStyles.postCard}>
               <h2 className={userModeStyles.postCardTitle}>频道管理</h2>
               {actionLoading && <p>操作进行中...</p>}
@@ -585,48 +585,48 @@ export default function AdminMode() {
                     />
                   </div>
                   <button type="submit" disabled={actionLoading} className={userModeStyles.button}>添加频道</button>
-                </form>
+                  </form>
               </div>
               <div className={userModeStyles.adminSection}>
                 <h2>现有频道</h2>
                 {actionLoading && <p>操作进行中...</p>}
                 <table className={utilStyles.table}>
-                  <thead>
-                    <tr>
-                      <th>ID</th>
+                      <thead>
+                        <tr>
+                          <th>ID</th>
                       <th>频道名称 (帖子数)</th>
                       <th>描述</th>
-                      <th>操作</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sections.length === 0 ? (
-                      <tr>
+                          <th>操作</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {sections.length === 0 ? (
+                          <tr>
                         <td colSpan="4" style={{ textAlign: 'center' }}>暂无频道数据</td>
-                      </tr>
-                    ) : (
-                      sections.map(section => (
-                        <tr key={section.section_id}>
-                          <td>{section.section_id}</td>
+                          </tr>
+                        ) : (
+                          sections.map(section => (
+                            <tr key={section.section_id}>
+                              <td>{section.section_id}</td>
                           <td>{section.section_name} ({section.post_count || 0})</td>
                           <td>{section.description || '无'}</td>
                           <td>
-                            <button
-                              onClick={() => handleDeleteSection(section.section_id)}
-                              disabled={actionLoading}
+                                <button 
+                                  onClick={() => handleDeleteSection(section.section_id)}
+                                  disabled={actionLoading}
                               className={`${userModeStyles.button} ${userModeStyles.dangerButton} ${userModeStyles.smallButton}`}
-                            >
-                              删除
-                            </button>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
+                                >
+                                  删除
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
         </div>
       </div>
     </Layout>

@@ -20,7 +20,9 @@ export default async function handler(req, res) {
     await conn.beginTransaction();
 
     // 删除与帖子相关的评论
-    await conn.query('DELETE FROM comment WHERE post_id = ?', [postId]);
+    // await conn.query('DELETE FROM comment WHERE post_id = ?', [postId]);
+    // 删除与帖子相关的评论 (使用 JOIN 方式)
+    await conn.query('DELETE c FROM comment c JOIN post p ON c.post_id = p.post_id WHERE p.post_id = ?', [postId]);
 
     // 删除与帖子相关的点赞
     // 注意：这里需要根据你的 Likes 表结构来调整 SQL 语句

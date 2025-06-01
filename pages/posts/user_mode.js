@@ -444,14 +444,14 @@ export default function UserMode() {
                   <li><p className={utilStyles.loading}>加载中...</p></li>
                 ) : (
                   sections.map(section => (
-                    <li key={section.section_id}>
+                  <li key={section.section_id}>
                       <button 
-                        className={`${userModeStyles.navItem} ${activeSection === section.section_id ? userModeStyles.active : ''}`}
+                      className={`${userModeStyles.navItem} ${activeSection === section.section_id ? userModeStyles.active : ''}`}
                         onClick={() => handleSectionFilter(section.section_id)}
-                      >
+                    >
                         {section.section_name} ({section.post_count || 0})
                       </button>
-                    </li>
+                  </li>
                   ))
                 )}
               </ul>
@@ -482,7 +482,7 @@ export default function UserMode() {
               <div className={userModeStyles.postCard} style={{ marginBottom: '20px', textAlign: 'center' }}>
                 <h1 className={userModeStyles.heading} style={{ margin: 0 }}>
                 校园论坛
-                {activeSection !== null && sections.find(s => s.section_id === activeSection) &&
+                {activeSection !== null && sections.find(s => s.section_id === activeSection) && 
                   ` - ${sections.find(s => s.section_id === activeSection).section_name}`
                 }
                 {activeSection !== null && sections.find(s => s.section_id === activeSection) && sections.find(s => s.section_id === activeSection).description && (
@@ -529,6 +529,7 @@ export default function UserMode() {
                             name="section_id" 
                             value={newPost.section_id}
                             onChange={handleInputChange}
+                            className={`${userModeStyles.formInput} ${userModeStyles.searchSelect}`}
                             required
                           >
                             <option value="">-- 请选择频道 --</option>
@@ -569,19 +570,12 @@ export default function UserMode() {
                         {formError && <div className={userModeStyles.error}>{formError}</div>}
                         
                         <div className={userModeStyles.formActions}>
-                          <button 
-                            type="button" 
-                            className={userModeStyles.cancelButton}
-                            onClick={() => {
-                              setShowNewPostForm(false);
-                              setFormError('');
-                            }}
-                          >
-                            取消
-                          </button>
-                          <button type="submit" className={userModeStyles.submitButton}>
-                            发布帖子
-                          </button>
+                          <button type="submit" disabled={false} className={userModeStyles.button}>发布帖子</button>
+                          <button type="button" onClick={() => {
+                            setShowNewPostForm(false);
+                            setNewPost({ title: '', content: '', section_id: '' }); // 清空表单
+                            setFormError(''); // 清空错误
+                          }} className={userModeStyles.button}>取消</button>
                         </div>
                       </form>
                     </div>

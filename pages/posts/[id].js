@@ -73,7 +73,7 @@ export default function PostDetail() {
 
     // 只有当 router 就绪、ID 存在且 currentUser 加载完成后才获取帖子和评论
     if (currentUser) {
-      fetchPostAndComments();
+    fetchPostAndComments();
     }
   }, [id, router.isReady, currentUser]); // 添加 currentUser 依赖
 

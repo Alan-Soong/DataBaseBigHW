@@ -15,8 +15,5 @@ export async function getPools() {
     user: 'root',
     password: '120NKu418Szl,', // ← 替换为你的真实密码
     database: 'mybbs'
-    // waitForConnections: true,
-    // connectionLimit: 10,
-    // queueLimit: 0
   });
 }
