@@ -572,7 +572,7 @@ export default function UserMode() {
                         <div className={userModeStyles.formActions}>
                           <button type="submit" disabled={false} className={userModeStyles.button}>发布帖子</button>
                           <button type="button" onClick={() => {
-                            setShowNewPostForm(false);
+                              setShowNewPostForm(false);
                             setNewPost({ title: '', content: '', section_id: '' }); // 清空表单
                             setFormError(''); // 清空错误
                           }} className={userModeStyles.button}>取消</button>
@@ -633,7 +633,7 @@ export default function UserMode() {
                             href={currentUser && post.user_id === currentUser.user_id ? '/user/me' : `/user/${post.user_id}`} 
                             className={userModeStyles.userLink}
                           >
-                                  {post.username}
+                                  {post.author_username || post.username || '未知用户'}
                           </Link></span>
                           <span>发布时间: {formatDate(post.post_time)}</span>
                           <span>评论数: {post.comment_count}</span>
@@ -672,7 +672,7 @@ export default function UserMode() {
                             href={currentUser && post.user_id === currentUser.user_id ? '/user/me' : `/user/${post.user_id}`} 
                             className={userModeStyles.userLink}
                           >
-                            {post.username}
+                            {post.author_username || post.username || '未知用户'}
                           </Link></span>
                           <span>发布时间: {formatDate(post.post_time)}</span>
                           <span>评论数: {post.comment_count}</span>

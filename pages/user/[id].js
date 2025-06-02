@@ -14,15 +14,17 @@ export default function UserProfile() {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isFollowing, setIsFollowing] = useState(false);
-  const [isBlocked, setIsBlocked] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [viewerId, setViewerId] = useState(null);
-  const [toast, setToast] = useState({ show: false, message: '' });
+  // const [toast, setToast] = useState({ show: false, message: '' }); // 注释掉原来的toast state
 
   // 列表模态框相关状态
   const [showListModal, setShowListModal] = useState(false);
   const [listModalTitle, setListModalTitle] = useState('');
   const [listModalData, setListModalData] = useState([]);
+
+  // 警告框 state
+  const [warningBox, setWarningBox] = useState({ show: false, message: '' });
 
   // 可见性字段定义，根据需要添加更多字段 (从 settings.js 迁移过来)
   const visibilityFields = [
@@ -38,6 +40,8 @@ export default function UserProfile() {
     { name: 'followers_list', label: '粉丝列表' },
     { name: 'blocked_list', label: '拉黑列表' }, // 拉黑列表通常只有自己可见，但仍可提供设置选项
   ];
+
+  const visibilitySettings = null;
 
   // 获取当前登录用户信息
   useEffect(() => {
@@ -93,8 +97,7 @@ export default function UserProfile() {
 
           if (data.user) {
            // Ensure these states are updated based on fetched data
-           setIsFollowing(data.user.isFollowing || false); // Use boolean default
-           setIsBlocked(data.user.isBlocked || false); // Use boolean default
+           setIsFollowing(!!data.user.isFollowing); // 强制转为布尔值
           }
 
            // 如果是自己的主页，获取可见性设置
@@ -124,10 +127,15 @@ export default function UserProfile() {
 
   // 处理关注/取消关注
   const handleFollow = async () => {
-    if (!currentUser || !userProfile) return;
+    console.log('handleFollow called', { currentUser, userProfile, isFollowing });
+    if (!currentUser || !userProfile) {
+      console.log('No currentUser or userProfile');
+      return;
+    }
     setActionLoading(true);
     try {
       const action = isFollowing ? 'unfollow' : 'follow';
+      console.log('Sending fetch', { userId: currentUser.user_id, targetUserId: userProfile.user_id, action });
       const res = await fetch('/api/user/follow', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -138,6 +146,7 @@ export default function UserProfile() {
         }),
       });
       const data = await res.json();
+      console.log('fetch result', data);
       if (data.success) {
         setIsFollowing(!isFollowing);
         // 更新粉丝数/关注数显示
@@ -146,16 +155,17 @@ export default function UserProfile() {
         } else { // 如果是别人的主页，更新对方的粉丝数
             setUserProfile(prev => ({ ...prev, follower_count: data.newCount }));
         }
-
-        showToast(action === 'follow' ? '关注成功' : '取消关注成功');
-        // 手动刷新用户资料以获取最新关注/粉丝数
+        // showToast(action === 'follow' ? '关注成功' : '取消关注成功'); // 注释掉成功时的Toast
         fetchUserProfile();
       } else {
-        showToast(data.message || '操作失败');
+        // 失败时显示警告框
+        showWarningBox(data.message || '操作失败');
+        // showToast(data.message || '操作失败'); // 注释掉失败时的Toast
       }
     } catch (error) {
       console.error('关注/取消关注操作失败:', error);
-      showToast('操作失败，请稍后重试');
+      showWarningBox('操作失败，请稍后重试');
+      // showToast('操作失败，请稍后重试'); // 注释掉失败时的Toast
     } finally {
       setActionLoading(false);
     }
@@ -163,41 +173,40 @@ export default function UserProfile() {
 
   // 处理拉黑/取消拉黑
   const handleBlock = async () => {
+    console.log('handleBlock called', { currentUser, userProfile, isBlocked: userProfile?.isBlocked });
     if (!currentUser || !userProfile) return;
-     setActionLoading(true);
+    setActionLoading(true);
     try {
-      const action = isBlocked ? 'unblock' : 'block';
+      // const action = userProfile.isBlocked ? 'unblock' : 'block';
+      const action = userProfile?.isBlocked ? 'unblock' : 'block';
+      console.log('Sending block fetch', { userId: currentUser.user_id, targetUserId: userProfile.user_id, action });
       const res = await fetch('/api/user/block', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: currentUser.user_id, // 当前用户是操作者
-          targetUserId: userProfile.user_id, // 目标用户
+          // userId: currentUser.user_id, // 当前用户是操作者
+          // targetUserId: userProfile.user_id, // 目标用户
+          userId: currentUser.user_id,
+          targetUserId: userProfile.user_id,
           action: action
         }),
       });
       const data = await res.json();
+      console.log('block fetch result', data);
       if (data.success) {
-        setIsBlocked(!isBlocked);
-        // 拉黑成功后，如果之前是关注状态，前端同步更新为非关注状态
-        if (action === 'block' && isFollowing) {
-             setIsFollowing(false);
-             // 并且更新自己的关注数（如果需要）
-             if (userProfile.user_id === currentUser.user_id) { // 如果是自己的主页，更新关注数
-                 setUserProfile(prev => ({ ...prev, following_count: Math.max(0, (prev.following_count || 0) - 1) }));
-             }
-        }
-        showToast(action === 'block' ? '拉黑成功' : '取消拉黑成功');
-        // 手动刷新用户资料以获取最新关注/粉丝数
+        // showToast(action === 'block' ? '拉黑成功' : '取消拉黑成功'); // 注释掉成功时的Toast
         fetchUserProfile();
       } else {
-        showToast(data.message || '操作失败');
+        // 失败时显示警告框
+        showWarningBox(data.message || '操作失败');
+        // showToast(data.message || '操作失败'); // 注释掉失败时的Toast
       }
     } catch (error) {
       console.error('拉黑/取消拉黑操作失败:', error);
-      showToast('操作失败，请稍后重试');
+      showWarningBox('操作失败，请稍后重试');
+      // showToast('操作失败，请稍后重试'); // 注释掉失败时的Toast
     } finally {
-       setActionLoading(false);
+      setActionLoading(false);
     }
   };
 
@@ -315,10 +324,12 @@ export default function UserProfile() {
   }, []); // Run only on component mount
 
   const showToast = (message) => {
-    setToast({ show: true, message });
-    setTimeout(() => {
-      setToast({ show: false, message: '' });
-    }, 3000);
+    // setToast({ show: true, message }); // 注释掉原来的toast逻辑
+    // setTimeout(() => {
+    //   setToast({ show: false, message: '' });
+    // }, 3000);
+    // 如果你需要保留成功的toast提示，可以考虑引入一个区分成功和失败提示的机制
+    // 目前只关注错误提示，所以这里不做其他处理
   };
 
   useEffect(() => {
@@ -422,6 +433,16 @@ export default function UserProfile() {
       console.error('点赞操作失败:', error);
       showToast('点赞操作失败，请稍后重试');
     }
+  };
+
+  // 显示警告框
+  const showWarningBox = (message) => {
+    setWarningBox({ show: true, message });
+  };
+
+  // 关闭警告框
+  const closeWarningBox = () => {
+    setWarningBox({ show: false, message: '' });
   };
 
   if (loading) {
@@ -551,12 +572,32 @@ export default function UserProfile() {
 
               {/* Follow and Block buttons */} 
               {viewerId && viewerId !== userProfile.user_id && (
-                <div className={userModeStyles.profileActions}> {/* Applied userModeStyles.profileActions */}
-                  <button onClick={handleFollow} disabled={actionLoading || !currentUser} className={`${userModeStyles.followButton} ${isFollowing ? userModeStyles.following : ''}`}> {/* Apply follow button style */}
-                    {actionLoading ? '处理中...' : (isFollowing ? '已关注' : '关注')}
+                <div className={userModeStyles.profileActions}>
+                  <button
+                    onClick={handleFollow}
+                    // disabled={actionLoading || !currentUser || userProfile?.isBlocked}
+                    disabled={actionLoading || !currentUser}
+                    className={[
+                      userModeStyles.followButton,
+                      isFollowing ? userModeStyles.following : '',
+                      // 注释掉已拉黑时禁用和变灰的逻辑
+                      // userProfile?.isBlocked ? userModeStyles.disabled : ''
+                    ].join(' ')}
+                  >
+                    {actionLoading ? '处理中...' : (isFollowing ? '取消关注' : '关注')}
                   </button>
-                  <button onClick={handleBlock} disabled={actionLoading || !currentUser} className={`${userModeStyles.blockButton} ${isBlocked ? userModeStyles.blocked : ''}`}> {/* Apply block button style */}
-                    {actionLoading ? '处理中...' : (isBlocked ? '已拉黑' : '拉黑')}
+                  <button
+                    onClick={handleBlock}
+                    // disabled={actionLoading || !currentUser || isFollowing}
+                    disabled={actionLoading || !currentUser}
+                    className={[
+                      userModeStyles.blockButton,
+                      userProfile?.isBlocked ? userModeStyles.blocked : '',
+                      // 注释掉已关注时禁用和变灰的逻辑
+                      // isFollowing ? userModeStyles.disabled : ''
+                    ].join(' ')}
+                  >
+                    {actionLoading ? '处理中...' : (userProfile?.isBlocked ? '取消拉黑' : '拉黑')}
                   </button>
                 </div>
               )}
@@ -634,11 +675,15 @@ export default function UserProfile() {
         </main> {/* Closing main tag */}
       </div> {/* Closing div for container */}
 
-      {/* Toast Notification */}
-      {toast.show && (
-        <div className={userModeStyles.toast}> {/* Applied userModeStyles.toast */}
-          {toast.message}
-        </div>
+      {/* 警告框 */}
+      {warningBox.show && (
+          <div className={userModeStyles.warningOverlay}> {/* 半透明背景 */}
+              <div className={userModeStyles.warningBox}> {/* 警告框内容区域 */}
+                  <h3 className={userModeStyles.warningTitle}>操作失败</h3> {/* 警告标题 */}
+                  <p className={userModeStyles.warningMessage}>{warningBox.message}</p> {/* 警告消息 */}
+                  <button onClick={closeWarningBox} className={userModeStyles.warningButton}>确定</button> {/* 关闭按钮 */}
+              </div>
+          </div>
       )}
 
        {/* List modal for followers, following, blocked */}

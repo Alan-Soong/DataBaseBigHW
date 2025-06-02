@@ -9,8 +9,19 @@ import Link from 'next/link'; // 导入 Link 组件
 export default function UserSettings() {
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState(null);
-  const [visibilitySettings, setVisibilitySettings] = useState({});
   const [loading, setLoading] = useState(true);
+  // 初始化 visibilitySettings 状态，确保结构正确
+  const [visibilitySettings, setVisibilitySettings] = useState(() => {
+      const defaultSettings = {};
+       visibilityFields.forEach(field => {
+           defaultSettings[field.name] = {
+                visibleToAdminOnly: false,
+                visibleToFollowersOnly: false,
+                visibleToAll: true
+           };
+       });
+      return defaultSettings;
+  });
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '' });
 

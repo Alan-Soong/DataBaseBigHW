@@ -749,7 +749,7 @@
 .profileActions button {
   padding: var(--spacing-small) var(--spacing-large);
   border: none;
-  border-radius: var(--border-radius);
+  border-radius: 25px; /* 圆润按钮 */
   cursor: pointer;
   font-size: 1rem;
   font-weight: 500;
@@ -771,7 +771,7 @@
 .profileActions .followButton.following {
   background-color: var(--bg-light);
   color: var(--primary-color);
-  border: 1px solid var(--primary-color);
+  border: 1px solid var(--primary-color); /* 已关注状态，蓝色边框 */
 }
 
 .profileActions .blockButton {
@@ -786,7 +786,7 @@
 .profileActions .blockButton.blocked {
   background-color: var(--bg-light);
   color: var(--danger-color);
-  border: 1px solid var(--danger-color);
+  border: 1px solid var(--danger-color); /* 已拉黑状态，红色边框 */
 }
 
 .profileActions button:disabled {
@@ -1330,4 +1330,71 @@
     margin-top: var(--spacing-small); /* 与输入框的顶部间隔 */
     width: 100%; /* 让容器填充可用宽度 */
     justify-content: center; /* 按钮居中对齐 */
+}
+
+/* 禁用按钮样式，仿照关注按钮风格 */
+.disabled {
+  background: #ccc !important;
+  color: #888 !important;
+  cursor: not-allowed !important;
+  border: none !important;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* 警告框样式 */
+.warningOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6); /* 半透明背景 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 3000; /* 确保在最上层 */
+}
+
+.warningBox {
+  background-color: white;
+  padding: var(--spacing-large);
+  border-radius: var(--border-radius);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+  text-align: center;
+  max-width: 400px; /* 调整最大宽度 */
+  width: 90%;
+  border: 1px solid var(--danger-color); /* 红色边框 */
+}
+
+.warningTitle {
+  font-size: 1.6rem;
+  margin-bottom: var(--spacing-medium);
+  color: var(--danger-color); /* 红色标题 */
+}
+
+.warningMessage {
+  font-size: 1.1rem;
+  margin-bottom: 2rem; /* 增加与下方按钮的间距 */
+  color: var(--text-color);
+}
+
+.warningButton {
+  padding: var(--spacing-small) 3rem; /* 增加水平内边距 */
+  background-color: #3498db; /* 蓝色背景 */
+  color: white; /* 白色文字 */
+  border: 1px solid #3498db; /* 蓝色边框 */
+  border-radius: 25px; /* 圆润按钮 */
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  margin-bottom: 1rem; /* 增加按钮与下方边界的间距 */
+  width: 100px;
+  height: 40px;
+}
+
+.warningButton:hover {
+  background-color: #2980b9; /* 悬停时深蓝色背景 */
+  border-color: #2980b9; /* 悬停时边框变深 */
 }

@@ -385,7 +385,12 @@ export default function PostDetail() {
                 {post.title}
               </h1>
               <div className={userModeStyles.postMeta}> {/* Apply userModeStyles for post meta */}
-                <span>作者: {post.username}</span>
+                <span>作者: <Link 
+                  href={currentUser && post.user_id === currentUser.user_id ? '/user/me' : `/user/${post.user_id}`}
+                  className={userModeStyles.userLink}
+                >
+                  {post.author_username || post.username || '未知用户'}
+                </Link></span>
                 <span>频道: {post.section_name || '未分类'}</span>
               </div>
               <div className={userModeStyles.postMeta}> {/* Separate div for time and comments to match image */}

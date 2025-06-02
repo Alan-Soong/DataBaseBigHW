@@ -23,81 +23,22 @@ export default async function handler(req, res) {
   const connection = await getConnection();
   try {
     await connection.beginTransaction();
-
+    let result;
     if (action === 'block') {
-      // 检查是否已经拉黑
-      const [existingBlock] = await connection.execute(
-        'SELECT 1 FROM BlockRelation WHERE blocker_id = ? AND blocked_id = ?',
-        [userId, targetUserId]
-      );
-
-      if (existingBlock.length > 0) {
-        await connection.rollback();
-        return res.status(200).json({ success: true, message: '已拉黑', action: 'already_blocked' });
-      }
-
-      // 添加拉黑记录
-      await connection.execute(
-        'INSERT INTO BlockRelation (blocker_id, blocked_id) VALUES (?, ?)',
-        [userId, targetUserId]
-      );
-
-      // 如果用户之前关注了此人，取消关注（可选，取决于产品逻辑）
-       await connection.execute(
-         'DELETE FROM FollowRelation WHERE follower_id = ? AND followed_id = ?',
-         [userId, targetUserId]
-       );
-       // 更新关注数（如果取消了关注）
-       // 需要先查询是否关注了，才能确定是否减去 following_count
-       // 这里的简化逻辑是：拉黑就直接尝试减少关注数，即使没关注也不会报错（如果following_count >= 0)
-       await connection.execute(
-          'UPDATE Users SET following_count = GREATEST(0, following_count - 1) WHERE user_id = ?',
-          [userId]
-       );
-       // 更新拉黑数和被拉黑数
-       await connection.execute(
-           'UPDATE Users SET blocker_count = blocker_count + 1 WHERE user_id = ?',
-           [userId]
-       );
-       await connection.execute(
-           'UPDATE Users SET blocked_count = blocked_count + 1 WHERE user_id = ?',
-           [targetUserId]
-       );
-
+      await connection.query('CALL sp_block_user(?, ?, @success, @msg)', [userId, targetUserId]);
+      const [resultRows] = await connection.query('SELECT @success AS success, @msg AS message');
+      result = resultRows[0];
     } else if (action === 'unblock') {
-       // 检查是否已经拉黑
-       const [existingBlock] = await connection.execute(
-        'SELECT 1 FROM BlockRelation WHERE blocker_id = ? AND blocked_id = ?',
-        [userId, targetUserId]
-      );
-
-      if (existingBlock.length === 0) {
-        await connection.rollback();
-        return res.status(200).json({ success: true, message: '未拉黑', action: 'not_blocked' });
-      }
-
-      // 删除拉黑记录
-      await connection.execute(
-        'DELETE FROM BlockRelation WHERE blocker_id = ? AND blocked_id = ?',
-        [userId, targetUserId]
-      );
-
-      // 更新拉黑数和被拉黑数
-      await connection.execute(
-          'UPDATE Users SET blocker_count = GREATEST(0, blocker_count - 1) WHERE user_id = ?',
-          [userId]
-      );
-      await connection.execute(
-          'UPDATE Users SET blocked_count = GREATEST(0, blocked_count - 1) WHERE user_id = ?',
-          [targetUserId]
-      );
-
-      // 取消拉黑不影响关注关系，如果之前关注了，取消拉黑后不会自动恢复关注
+      await connection.query('CALL sp_unblock_user(?, ?, @success, @msg)', [userId, targetUserId]);
+      const [resultRows] = await connection.query('SELECT @success AS success, @msg AS message');
+      result = resultRows[0];
     }
-
     await connection.commit();
-    res.status(200).json({ success: true, action: action === 'block' ? 'blocked' : 'unblocked' });
-
+    if (result.success === 1 || result.success === true || result.success === '1') {
+      res.status(200).json({ success: true, message: result.message });
+    } else {
+      res.status(200).json({ success: false, message: result.message });
+    }
   } catch (error) {
     await connection.rollback();
     console.error(`执行拉黑/取消拉黑操作失败: ${error}`);

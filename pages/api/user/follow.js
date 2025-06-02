@@ -23,67 +23,35 @@ export default async function handler(req, res) {
   const connection = await getConnection();
   try {
     await connection.beginTransaction();
-
+    let result;
     if (action === 'follow') {
-      // 检查是否已经关注
-      const [existingFollow] = await connection.execute(
-        'SELECT 1 FROM FollowRelation WHERE follower_id = ? AND followed_id = ?',
-        [userId, targetUserId]
-      );
-
-      if (existingFollow.length > 0) {
-        await connection.rollback();
-        return res.status(200).json({ success: true, message: '已关注', action: 'already_following' });
-      }
-
-      // 添加关注记录
-      await connection.execute(
-        'INSERT INTO FollowRelation (follower_id, followed_id) VALUES (?, ?)',
-        [userId, targetUserId]
-      );
-
-      // 更新用户关注数和粉丝数（假设 Users 表有 following_count 和 follower_count 字段）
-      await connection.execute(
-          'UPDATE Users SET following_count = following_count + 1 WHERE user_id = ?',
-          [userId]
-      );
-      await connection.execute(
-          'UPDATE Users SET follower_count = follower_count + 1 WHERE user_id = ?',
-          [targetUserId]
-      );
-
+      // 先执行存储过程
+      await connection.query('CALL sp_follow_user(?, ?, @success, @msg)', [userId, targetUserId]);
+      // 再查询输出参数
+      const [resultRows] = await connection.query('SELECT @success AS success, @msg AS message');
+      result = resultRows[0];
     } else if (action === 'unfollow') {
-      // 检查是否已经关注
-      const [existingFollow] = await connection.execute(
-        'SELECT 1 FROM FollowRelation WHERE follower_id = ? AND followed_id = ?',
-        [userId, targetUserId]
-      );
-
-      if (existingFollow.length === 0) {
-        await connection.rollback();
-        return res.status(200).json({ success: true, message: '未关注', action: 'not_following' });
-      }
-      
-      // 删除关注记录
-      await connection.execute(
-        'DELETE FROM FollowRelation WHERE follower_id = ? AND followed_id = ?',
-        [userId, targetUserId]
-      );
-
-       // 更新用户关注数和粉丝数
-       await connection.execute(
-          'UPDATE Users SET following_count = following_count - 1 WHERE user_id = ?',
-          [userId]
-      );
-      await connection.execute(
-          'UPDATE Users SET follower_count = follower_count - 1 WHERE user_id = ?',
-          [targetUserId]
-      );
+      await connection.query('CALL sp_unfollow_user(?, ?, @success, @msg)', [userId, targetUserId]);
+      const [resultRows] = await connection.query('SELECT @success AS success, @msg AS message');
+      result = resultRows[0];
     }
-
     await connection.commit();
-    res.status(200).json({ success: true, action: action === 'follow' ? 'followed' : 'unfollowed' });
-
+    if (result.success === 1 || result.success === true || result.success === '1') {
+      // 查询最新粉丝数或关注数
+      let newCount = 0;
+      if (parseInt(userId) === parseInt(targetUserId)) {
+        // 自己主页，查关注数
+        const [rows] = await connection.query('SELECT COUNT(*) as cnt FROM followrelation WHERE follower_id = ?', [userId]);
+        newCount = rows[0].cnt;
+      } else {
+        // 别人主页，查粉丝数
+        const [rows] = await connection.query('SELECT COUNT(*) as cnt FROM followrelation WHERE followed_id = ?', [targetUserId]);
+        newCount = rows[0].cnt;
+      }
+      res.status(200).json({ success: true, message: result.message, newCount });
+    } else {
+      res.status(200).json({ success: false, message: result.message });
+    }
   } catch (error) {
     await connection.rollback();
     console.error(`执行关注/取消关注操作失败: ${error}`);

@@ -100,8 +100,9 @@ export default async function handler(req, res) {
 
     // 检查查看者身份
     let isViewerAdmin = false;
-    let isViewerFollowing = false;
+    let isViewerFollowing = user.isFollowing;
     const viewerId = req.query.viewerId; 
+    console.log('userId:', userId, 'viewerId:', viewerId);
     if (viewerId) {
         if (parseInt(viewerId) === parseInt(userId)) { // 查看者是自己
             // 自己可以看到所有信息，无需过滤
@@ -121,12 +122,14 @@ export default async function handler(req, res) {
             isViewerFollowing = followRows.length > 0;
             user.isFollowing = isViewerFollowing; // 添加 isFollowing 字段到返回结果
 
-            // 检查查看者是否被拉黑 (如果被拉黑，可能需要隐藏一些信息)
+            // 检查查看者是否被拉黑 (无论是否自己，都查 blockrelation)
+            let isBlocked = false;
             const [blockRows] = await connection.execute(
                 'SELECT 1 FROM blockrelation WHERE blocker_id = ? AND blocked_id = ?',
-                [userId, viewerId] // 注意这里的顺序，是被查看者拉黑了查看者
+                [viewerId, userId]
             );
-            user.isBlocked = blockRows.length > 0; // 添加 isBlocked 字段到返回结果
+            isBlocked = blockRows.length > 0;
+            user.isBlocked = isBlocked;
 
             // 根据可见性设置过滤字段
             const filteredUser = { user_id: user.user_id, username: user.username }; // 默认返回ID和用户名
@@ -172,6 +175,9 @@ export default async function handler(req, res) {
 
             // 列表数据 (关注、粉丝、拉黑) 不直接在这里返回完整列表，而是通过单独API获取并检查可见性
             // 这里只返回数量并在前端控制是否显示按钮或数量
+            // 保留 isFollowing 和 isBlocked 字段
+            filteredUser.isFollowing = isViewerFollowing;
+            filteredUser.isBlocked = isBlocked;
 
             user = filteredUser; // 使用过滤后的用户对象
         }
@@ -215,6 +221,11 @@ export default async function handler(req, res) {
     }
     
     await connection.end();
+    
+    // 保证 user 对象始终有 isBlocked 字段
+    if (!('isBlocked' in user)) {
+      user.isBlocked = false;
+    }
     
     return res.status(200).json({ 
       success: true, 

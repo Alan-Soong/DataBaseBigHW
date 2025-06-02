@@ -134,11 +134,11 @@ async function addLike(userId, targetType, targetId) {
 
     await connection.commit();
 
-    // 查询最新点赞数
-    const [countResult] = await connection.execute(
-      'SELECT COUNT(*) as count FROM Likes WHERE target_type = ? AND target_id = ?',
-      [targetType, targetId]
-    );
+      // 查询最新点赞数
+      const [countResult] = await connection.execute(
+        'SELECT COUNT(*) as count FROM Likes WHERE target_type = ? AND target_id = ?',
+        [targetType, targetId]
+      );
 
     // 检查是否已点赞
     const [likeResult] = await connection.execute(

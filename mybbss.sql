@@ -10,7 +10,7 @@ Target Server Type    : MYSQL
 Target Server Version : 80019
 File Encoding         : 65001
 
-Date: 2025-05-31 16:16:02
+Date: 2025-06-02 10:29:41
 */
 
 SET FOREIGN_KEY_CHECKS=0;
@@ -36,6 +36,7 @@ INSERT INTO `belonging_to` VALUES ('2', '12');
 INSERT INTO `belonging_to` VALUES ('1', '13');
 INSERT INTO `belonging_to` VALUES ('5', '14');
 INSERT INTO `belonging_to` VALUES ('5', '16');
+INSERT INTO `belonging_to` VALUES ('1', '19');
 
 -- ----------------------------
 -- Table structure for `blockrelation`
@@ -51,6 +52,7 @@ CREATE TABLE `blockrelation` (
 -- ----------------------------
 -- Records of blockrelation
 -- ----------------------------
+INSERT INTO `blockrelation` VALUES ('4', '3', null);
 
 -- ----------------------------
 -- Table structure for `blockvisibility`
@@ -184,7 +186,7 @@ CREATE TABLE `likes` (
   UNIQUE KEY `uk_user_target` (`user_id`,`target_type`,`target_id`),
   KEY `fk_like_user` (`user_id`),
   CONSTRAINT `fk_like_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=103 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=122 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------
 -- Records of likes
@@ -204,9 +206,12 @@ INSERT INTO `likes` VALUES ('60', '3', 'comment', '12', '2025-05-30 22:02:39');
 INSERT INTO `likes` VALUES ('73', '3', 'post', '16', '2025-05-31 14:23:01');
 INSERT INTO `likes` VALUES ('81', '4', 'post', '12', '2025-05-31 14:59:21');
 INSERT INTO `likes` VALUES ('86', '4', 'post', '13', '2025-05-31 15:21:42');
-INSERT INTO `likes` VALUES ('100', '4', 'post', '16', '2025-05-31 15:51:35');
 INSERT INTO `likes` VALUES ('101', '4', 'comment', '18', '2025-05-31 15:51:38');
 INSERT INTO `likes` VALUES ('102', '4', 'post', '14', '2025-05-31 15:56:48');
+INSERT INTO `likes` VALUES ('104', '4', 'post', '16', '2025-05-31 21:00:49');
+INSERT INTO `likes` VALUES ('109', '7', 'post', '16', '2025-05-31 22:24:26');
+INSERT INTO `likes` VALUES ('110', '7', 'comment', '18', '2025-05-31 22:28:28');
+INSERT INTO `likes` VALUES ('121', '4', 'post', '19', '2025-06-02 10:12:04');
 
 -- ----------------------------
 -- Table structure for `post`
@@ -222,7 +227,7 @@ CREATE TABLE `post` (
   PRIMARY KEY (`post_id`),
   KEY `fk_post_user` (`user_id`),
   CONSTRAINT `fk_post_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------
 -- Records of post
@@ -233,6 +238,7 @@ INSERT INTO `post` VALUES ('12', '5', '计科', '南开大学计算机学院', '
 INSERT INTO `post` VALUES ('13', '5', '123', '南开大学密码与网络空间安全学院', '2025-05-29 17:04:43', '2025-05-29 17:04:43');
 INSERT INTO `post` VALUES ('14', '4', '出书！', '有朋友想买书吗？价格便宜，后台私信我！', '2025-05-30 09:23:34', '2025-05-30 09:23:34');
 INSERT INTO `post` VALUES ('16', '3', '出复习资料', '毛概马原资料，价格可议！', '2025-05-31 13:38:33', '2025-05-31 13:38:33');
+INSERT INTO `post` VALUES ('19', '4', '吃饭！', '疯狂星期四', '2025-06-01 14:14:59', '2025-06-01 14:14:59');
 
 -- ----------------------------
 -- Table structure for `profilevisibility`
@@ -301,23 +307,6 @@ INSERT INTO `section` VALUES ('5', null, '二手交易', '发布二手物品交�
 INSERT INTO `section` VALUES ('6', null, '情感交友', null);
 
 -- ----------------------------
--- Table structure for `useridentity`
--- ----------------------------
-DROP TABLE IF EXISTS `useridentity`;
-CREATE TABLE `useridentity` (
-  `identity_id` bigint NOT NULL,
-  `user_id` bigint NOT NULL,
-  `student_id` bigint DEFAULT NULL,
-  PRIMARY KEY (`identity_id`),
-  KEY `fk_identity_user` (`user_id`),
-  CONSTRAINT `fk_identity_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- ----------------------------
--- Records of useridentity
--- ----------------------------
-
--- ----------------------------
 -- Table structure for `userisadmin`
 -- ----------------------------
 DROP TABLE IF EXISTS `userisadmin`;
@@ -335,6 +324,13 @@ INSERT INTO `userisadmin` VALUES ('2', '1');
 INSERT INTO `userisadmin` VALUES ('3', '0');
 INSERT INTO `userisadmin` VALUES ('4', '0');
 INSERT INTO `userisadmin` VALUES ('5', '0');
+INSERT INTO `userisadmin` VALUES ('6', '0');
+INSERT INTO `userisadmin` VALUES ('7', '0');
+INSERT INTO `userisadmin` VALUES ('9', '0');
+INSERT INTO `userisadmin` VALUES ('10', '0');
+INSERT INTO `userisadmin` VALUES ('11', '0');
+INSERT INTO `userisadmin` VALUES ('12', '0');
+INSERT INTO `userisadmin` VALUES ('13', '0');
 
 -- ----------------------------
 -- Table structure for `users`
@@ -357,15 +353,88 @@ CREATE TABLE `users` (
   PRIMARY KEY (`user_id`),
   KEY `fk_user_level` (`level_id`),
   CONSTRAINT `fk_user_level` FOREIGN KEY (`level_id`) REFERENCES `levelrule` (`level_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------
 -- Records of users
 -- ----------------------------
 INSERT INTO `users` VALUES ('2', null, '1', null, 'fdsa', null, '8909-0-9', '0', '1', '0', '0', '0', '0');
-INSERT INTO `users` VALUES ('3', null, '2', '2131421', 'ALM', 'Computer Science', 'qpalz,da', '104', '1', '2', '1', '0', '0');
-INSERT INTO `users` VALUES ('4', null, '1', '134452', 'Pity', 'Finance', '10erosf', '18', '1', '1', '1', '0', '0');
-INSERT INTO `users` VALUES ('5', null, '1', '2311100', '2311100', '物联网', '123456', '2', '1', '0', '1', '0', '0');
+INSERT INTO `users` VALUES ('3', null, '2', '2131421', 'ALM', 'Computer Science', 'qpalz,da', '105', '1', '2', '2', '0', '1');
+INSERT INTO `users` VALUES ('4', null, '1', '134452', 'Pity', 'Finance', '10erosf', '24', '1', '1', '1', '1', '0');
+INSERT INTO `users` VALUES ('5', null, '1', '2311100', '2311100', '物联网', '123456', '3', '1', '0', '1', '0', '0');
+INSERT INTO `users` VALUES ('6', null, '1', '2324354', 'Big', '金融', 'qweasd', '0', '1', '0', '0', '0', '0');
+INSERT INTO `users` VALUES ('7', null, '1', '2248392', 'Smalls', '经济', '102938', '0', '1', '0', '0', '0', '0');
+INSERT INTO `users` VALUES ('9', null, '1', '2190453', 'adswqe', '历史学', '12qwaszx', '0', '1', '0', '0', '0', '0');
+INSERT INTO `users` VALUES ('10', null, '1', '2098456', 'KNN', '法学', 'zmxncbv', '0', '1', '0', '0', '0', '0');
+INSERT INTO `users` VALUES ('11', null, '1', '1234567', '2190456', '汉语言', 'qazwsx', '0', '1', '0', '0', '0', '0');
+INSERT INTO `users` VALUES ('12', null, '1', '2409586', 'xixihaha', '数学', 'qwpoeiru', '0', '1', '0', '0', '0', '0');
+INSERT INTO `users` VALUES ('13', null, '1', '2190456', 'bayes', '统计学', 'alskdjfh', '0', '1', '0', '0', '0', '0');
+
+-- ----------------------------
+-- View structure for `post_details_view`
+-- ----------------------------
+DROP VIEW IF EXISTS `post_details_view`;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `post_details_view` AS select `p`.`post_id` AS `post_id`,`p`.`user_id` AS `user_id`,`p`.`title` AS `title`,`p`.`content` AS `content`,`p`.`create_at` AS `create_at`,`p`.`post_time` AS `post_time`,`u`.`username` AS `author_username`,`s`.`section_id` AS `section_id`,`s`.`section_name` AS `section_name`,(select count(0) from `comment` `c` where (`c`.`post_id` = `p`.`post_id`)) AS `comment_count`,(select count(0) from `likes` `l` where ((`l`.`target_type` = 'post') and (`l`.`target_id` = `p`.`post_id`))) AS `like_count` from (((`post` `p` join `users` `u` on((`p`.`user_id` = `u`.`user_id`))) left join `belonging_to` `bt` on((`p`.`post_id` = `bt`.`post_id`))) left join `section` `s` on((`bt`.`section_id` = `s`.`section_id`))) ;
+
+-- ----------------------------
+-- Procedure structure for `sp_block_user`
+-- ----------------------------
+DROP PROCEDURE IF EXISTS `sp_block_user`;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_block_user`(
+    IN p_blocker_id INT,
+    IN p_blocked_id INT,
+    OUT p_success BOOLEAN,
+    OUT p_message VARCHAR(255)
+)
+BEGIN
+    -- 检查是否已关注
+    IF EXISTS (SELECT 1 FROM FollowRelation WHERE follower_id = p_blocker_id AND followed_id = p_blocked_id) THEN
+        SET p_success = FALSE;
+        SET p_message = '请先取消关注再拉黑该用户';
+    ELSEIF EXISTS (SELECT 1 FROM BlockRelation WHERE blocker_id = p_blocker_id AND blocked_id = p_blocked_id) THEN
+        SET p_success = FALSE;
+        SET p_message = '已拉黑';
+    ELSE
+        INSERT INTO BlockRelation (blocker_id, blocked_id) VALUES (p_blocker_id, p_blocked_id);
+        UPDATE Users SET blocker_count = blocker_count + 1 WHERE user_id = p_blocker_id;
+        UPDATE Users SET blocked_count = blocked_count + 1 WHERE user_id = p_blocked_id;
+        SET p_success = TRUE;
+        SET p_message = '拉黑成功';
+    END IF;
+END
+;;
+DELIMITER ;
+
+-- ----------------------------
+-- Procedure structure for `sp_follow_user`
+-- ----------------------------
+DROP PROCEDURE IF EXISTS `sp_follow_user`;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_follow_user`(
+    IN p_follower_id INT,
+    IN p_followed_id INT,
+    OUT p_success BOOLEAN,
+    OUT p_message VARCHAR(255)
+)
+BEGIN
+    -- 检查是否已拉黑
+    IF EXISTS (SELECT 1 FROM BlockRelation WHERE blocker_id = p_follower_id AND blocked_id = p_followed_id) THEN
+        SET p_success = FALSE;
+        SET p_message = '请先取消拉黑再关注该用户';
+    ELSEIF EXISTS (SELECT 1 FROM FollowRelation WHERE follower_id = p_follower_id AND followed_id = p_followed_id) THEN
+        SET p_success = FALSE;
+        SET p_message = '已关注';
+    ELSE
+        INSERT INTO FollowRelation (follower_id, followed_id) VALUES (p_follower_id, p_followed_id);
+        UPDATE Users SET following_count = following_count + 1 WHERE user_id = p_follower_id;
+        UPDATE Users SET follower_count = follower_count + 1 WHERE user_id = p_followed_id;
+        SET p_success = TRUE;
+        SET p_message = '关注成功';
+    END IF;
+END
+;;
+DELIMITER ;
 
 -- ----------------------------
 -- Procedure structure for `sp_save_profile_visibility`
@@ -412,6 +481,58 @@ BEGIN
         -- If not liked, insert new like record
         INSERT INTO `likes` (`user_id`, `target_type`, `target_id`, `create_at`)
         VALUES (p_user_id, p_target_type, p_target_id, NOW());
+    END IF;
+END
+;;
+DELIMITER ;
+
+-- ----------------------------
+-- Procedure structure for `sp_unblock_user`
+-- ----------------------------
+DROP PROCEDURE IF EXISTS `sp_unblock_user`;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_unblock_user`(
+    IN p_blocker_id INT,
+    IN p_blocked_id INT,
+    OUT p_success BOOLEAN,
+    OUT p_message VARCHAR(255)
+)
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM BlockRelation WHERE blocker_id = p_blocker_id AND blocked_id = p_blocked_id) THEN
+        SET p_success = FALSE;
+        SET p_message = '未拉黑';
+    ELSE
+        DELETE FROM BlockRelation WHERE blocker_id = p_blocker_id AND blocked_id = p_blocked_id;
+        UPDATE Users SET blocker_count = GREATEST(0, blocker_count - 1) WHERE user_id = p_blocker_id;
+        UPDATE Users SET blocked_count = GREATEST(0, blocked_count - 1) WHERE user_id = p_blocked_id;
+        SET p_success = TRUE;
+        SET p_message = '取消拉黑成功';
+    END IF;
+END
+;;
+DELIMITER ;
+
+-- ----------------------------
+-- Procedure structure for `sp_unfollow_user`
+-- ----------------------------
+DROP PROCEDURE IF EXISTS `sp_unfollow_user`;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_unfollow_user`(
+    IN p_follower_id INT,
+    IN p_followed_id INT,
+    OUT p_success BOOLEAN,
+    OUT p_message VARCHAR(255)
+)
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM FollowRelation WHERE follower_id = p_follower_id AND followed_id = p_followed_id) THEN
+        SET p_success = FALSE;
+        SET p_message = '未关注';
+    ELSE
+        DELETE FROM FollowRelation WHERE follower_id = p_follower_id AND followed_id = p_followed_id;
+        UPDATE Users SET following_count = GREATEST(0, following_count - 1) WHERE user_id = p_follower_id;
+        UPDATE Users SET follower_count = GREATEST(0, follower_count - 1) WHERE user_id = p_followed_id;
+        SET p_success = TRUE;
+        SET p_message = '取消关注成功';
     END IF;
 END
 ;;
@@ -512,6 +633,47 @@ BEGIN
 END
 ;;
 DELIMITER ;
+
+-- ----------------------------
+-- Procedure structure for `update_username`
+-- ----------------------------
+DROP PROCEDURE IF EXISTS `update_username`;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `update_username`(
+IN p_user_id INT,
+IN p_new_username VARCHAR(255)
+)
+BEGIN
+DECLARE user_exists INT;
+DECLARE username_taken INT;
+
+-- Check if the user exists
+SELECT COUNT(*) INTO user_exists FROM Users WHERE user_id = p_user_id;
+
+IF user_exists = 0 THEN
+-- User does not exist, throw an error
+SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'User does not exist';
+ELSE
+-- Check if the new username is already taken by another user
+SELECT COUNT(*) INTO username_taken FROM Users WHERE username = p_new_username AND user_id <> p_user_id;
+
+IF username_taken > 0 THEN
+-- Username is already taken, throw an error
+SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Username already exists';
+ELSE
+-- Username is available, perform the update
+UPDATE Users
+SET username = p_new_username
+WHERE user_id = p_user_id;
+
+-- Optionally return a success message or status
+-- SELECT 'Username updated successfully' AS message;
+END IF;
+END IF;
+
+END
+;;
+DELIMITER ;
 DROP TRIGGER IF EXISTS `check_unique_user_info`;
 DELIMITER ;;
 CREATE TRIGGER `check_unique_user_info` BEFORE INSERT ON `users` FOR EACH ROW BEGIN
@@ -548,29 +710,3 @@ CREATE TRIGGER `check_unique_user_info` BEFORE INSERT ON `users` FOR EACH ROW BE
 END
 ;;
 DELIMITER ;
-
--- ----------------------------
--- View structure for `post_details_view`
--- ----------------------------
-DROP VIEW IF EXISTS `post_details_view`;
-CREATE VIEW `post_details_view` AS
-SELECT
-    p.post_id,
-    p.user_id,
-    p.title,
-    p.content,
-    p.create_at,
-    p.post_time,
-    u.username AS author_username,
-    s.section_id,
-    s.section_name,
-    (SELECT COUNT(*) FROM comment c WHERE c.post_id = p.post_id) AS comment_count,
-    (SELECT COUNT(*) FROM likes l WHERE l.target_type = 'post' AND l.target_id = p.post_id) AS like_count
-FROM
-    post p
-JOIN
-    users u ON p.user_id = u.user_id
-LEFT JOIN
-    belonging_to bt ON p.post_id = bt.post_id
-LEFT JOIN
-    section s ON bt.section_id = s.section_id;
