@@ -10,20 +10,6 @@ export default function UserSettings() {
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  // 初始化 visibilitySettings 状态，确保结构正确
-  const [visibilitySettings, setVisibilitySettings] = useState(() => {
-      const defaultSettings = {};
-       visibilityFields.forEach(field => {
-           defaultSettings[field.name] = {
-                visibleToAdminOnly: false,
-                visibleToFollowersOnly: false,
-                visibleToAll: true
-           };
-       });
-      return defaultSettings;
-  });
-  const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState({ show: false, message: '' });
 
   // 可见性字段定义，根据需要添加更多字段
   const visibilityFields = [
@@ -39,6 +25,21 @@ export default function UserSettings() {
     { name: 'followers_list', label: '粉丝列表' },
     { name: 'blocked_list', label: '拉黑列表' }, // 拉黑列表通常只有自己可见，但仍可提供设置选项
   ];
+
+  // 初始化 visibilitySettings 状态，确保结构正确
+  const [visibilitySettings, setVisibilitySettings] = useState(() => {
+      const defaultSettings = {};
+       visibilityFields.forEach(field => {
+           defaultSettings[field.name] = {
+                visibleToAdminOnly: false,
+                visibleToFollowersOnly: false,
+                visibleToAll: true
+           };
+       });
+      return defaultSettings;
+  });
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: '' });
 
   // 获取当前登录用户
   useEffect(() => {
